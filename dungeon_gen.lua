@@ -5,12 +5,12 @@
 local dungen = {}
 	
 	-- Maximum size of the map
-	local xmax = 80		-- in columns of 32px
-	local ymax = 25		-- in rows of 32px
+	local xmax = 80											-- Maximum map width in columns (1 column = 32px)
+	local ymax = 25											-- Maximum map height in rows of (1 row = 32px)
 	
 	-- Size of the map
-	local xsize = 0
-	local ysize = 0
+	local xsize = 0											-- Actual map width in columns (1 column = 32px), 0 by default
+	local ysize = 0											-- Actual map height in rows of (1 row = 32px), 0 by default
 	
 	-- Number of "objects" to generate
 	local objects = 0
@@ -18,17 +18,17 @@ local dungen = {}
 	-- define the %chance to generate either a room or a corridor on the map
 	-- BTW, rooms are 1st priority so actually it's enough to just define the chance
 	-- of generating a room
-	local chanceRoom = 75
-	local chanceCorridor = 25
+	local chanceRoom = 75									-- % chance for adding a room
+	local chanceCorridor = 25								-- % chance for adding a corridor
 	
 	-- the dungeon map data
-	local dungeon_map = {}
+	local dungeon_map = {}									-- Table to hold the map data
 	
 	-- we will store the old random seed here
 	local oldseed = 0
 	
 	--a list over tile types we're using
-	local tileUnused = 0;
+	local tileUnused = 0
 	local tileDirtWall = 1		-- not in use
 	local tileDirtFloor = 2
 	local tileStoneWall = 3
@@ -39,12 +39,12 @@ local dungen = {}
 	local tileChest = 8
 	
 	-- misc. messages to print
-	local msgXSize = "X size of dungeon: \t";
-	local msgYSize = "Y size of dungeon: \t";
-	local msgMaxObjects = "max # of objects: \t";
-	local msgNumObjects = "# of objects made: \t";
-	local msgHelp = "";
-	local msgDetailedHelp = "";
+	local msgXSize = "X size of dungeon: "
+	local msgYSize = "Y size of dungeon: "
+	local msgMaxObjects = "max # of objects: "
+	local msgNumObjects = "# of objects made: "
+	local msgHelp = ""
+	local msgDetailedHelp = ""
 
 
 	-- setting a tile's type
@@ -58,10 +58,9 @@ local dungen = {}
 		return dungeon_map[x + xsize * y]	
 	end
 	
-	-- The RNG. the seed is based on seconds from the "java epoch" ( I think..)
-	-- perhaps it's the same date as the unix epoch
+	-- The RNG. the seed is based on seconds from the OS date/time
 	local getRand = function(min, max)
-		-- the seed is based on current date and the old, already used seed
+		-- the seed is based on current date/time and the old, already used seed
 		local now = os.time()
 		local seed = now + oldseed
 		oldseed = seed
@@ -90,67 +89,77 @@ local dungen = {}
 		local xtemp = 0;
 		local ytemp = 0;
 		
-		switch(dir){
-		case 0:
-		-- north
+		if dir == 0 then
+			-- north
 			-- check if there's enough space for the corridor
 			-- start with checking it's not out of the boundaries
-			if (x < 0 || x > xsize) return false;
-			else xtemp = x;
+			if x < 0 or x > xsize then
+				return false
+			else
+				xtemp = x
+			end
  
 			-- same thing here, to make sure it's not out of the boundaries
-			for (ytemp = y; ytemp > (y-len); ytemp--){
-				if (ytemp < 0 || ytemp > ysize) return false; -- oh boho, it was!
-				if (getCell(xtemp, ytemp) != tileUnused) return false;
-			}
+			for ytemp = y, ytemp > (y-len) do
+				if ytemp < 0 or ytemp > ysize then 
+					return false -- oh boho, it was!
+				end
+
+				if getCell(xtemp, ytemp) ~= tileUnused then
+					return false
+				end
+
+				ytemp = ytemp - 1
+			end
 
 			-- if we're still here, let's start building
-			for (ytemp = y; ytemp > (y-len); ytemp--){
+			for ytemp = y, ytemp > (y-len) do
+				setCell(xtemp, ytemp, floor)
+				ytemp =  ytemp - 1
+			end
+
+		elseif dir == 1 then
+			-- east
+			if y < 0 or y > ysize then
+				return false
+			else
+				ytemp = y
+			end
+
+			for (xtemp = x; xtemp < (x+len); xtemp++){
+				if (xtemp < 0 or xtemp > xsize) return false;
+				if (getCell(xtemp, ytemp) ~= tileUnused) return false;
+			}
+
+			for (xtemp = x; xtemp < (x+len); xtemp++){
 				setCell(xtemp, ytemp, floor);
 			}
-			break;
-		case 1:
-		-- east
-				if (y < 0 || y > ysize) return false;
-				else ytemp = y;
- 
-				for (xtemp = x; xtemp < (x+len); xtemp++){
-					if (xtemp < 0 || xtemp > xsize) return false;
-					if (getCell(xtemp, ytemp) != tileUnused) return false;
-				}
- 
-				for (xtemp = x; xtemp < (x+len); xtemp++){
-					setCell(xtemp, ytemp, floor);
-				}
-			break;
-		case 2:
-		-- south
-			if (x < 0 || x > xsize) return false;
+		elseif dir == 2 then
+			-- south
+			if (x < 0 or x > xsize) return false;
 			else xtemp = x;
  
 			for (ytemp = y; ytemp < (y+len); ytemp++){
-				if (ytemp < 0 || ytemp > ysize) return false;
-				if (getCell(xtemp, ytemp) != tileUnused) return false;
+				if (ytemp < 0 or ytemp > ysize) return false;
+				if (getCell(xtemp, ytemp) ~= tileUnused) return false;
 			}
  
 			for (ytemp = y; ytemp < (y+len); ytemp++){
 				setCell(xtemp, ytemp, floor);
 			}
-			break;
-		case 3:
-		-- west
-			if (ytemp < 0 || ytemp > ysize) return false;
+		elseif dir == 3 then
+			-- west
+			if (ytemp < 0 or ytemp > ysize) return false;
 			else ytemp = y;
  
 			for (xtemp = x; xtemp > (x-len); xtemp--){
-				if (xtemp < 0 || xtemp > xsize) return false;
-				if (getCell(xtemp, ytemp) != tileUnused) return false; 
+				if (xtemp < 0 or xtemp > xsize) return false;
+				if (getCell(xtemp, ytemp) ~= tileUnused) return false; 
 			}
  
 			for (xtemp = x; xtemp > (x-len); xtemp--){
 				setCell(xtemp, ytemp, floor);
 			}
-			break;
 		}
  
 		-- woot, were still here! lets tell the other guys were done!!
@@ -176,10 +185,10 @@ local dungen = {}
 		-- north
 			-- Check if there's enough space left for it
 			for (int ytemp = y; ytemp > (y-ylen); ytemp--){
-				if (ytemp < 0 || ytemp > ysize) return false;
+				if (ytemp < 0 or ytemp > ysize) return false;
 				for (int xtemp = (x-xlen/2); xtemp < (x+(xlen+1)/2); xtemp++){
-					if (xtemp < 0 || xtemp > xsize) return false;
-					if (getCell(xtemp, ytemp) != tileUnused) return false; -- no space left...
+					if (xtemp < 0 or xtemp > xsize) return false;
+					if (getCell(xtemp, ytemp) ~= tileUnused) return false; -- no space left...
 				}
 			}
  
@@ -199,9 +208,9 @@ local dungen = {}
 		case 1:
 		-- east
 			for (int ytemp = (y-ylen/2); ytemp < (y+(ylen+1)/2); ytemp++){
-				if (ytemp < 0 || ytemp > ysize) return false;
+				if (ytemp < 0 or ytemp > ysize) return false;
 				for (int xtemp = x; xtemp < (x+xlen); xtemp++){
-					if (xtemp < 0 || xtemp > xsize) return false;
+					if (xtemp < 0 or xtemp > xsize) return false;
 					if (getCell(xtemp, ytemp) ~= tileUnused) return false;
 				}
 			}
@@ -221,10 +230,10 @@ local dungen = {}
 		case 2:
 		-- south
 			for (int ytemp = y; ytemp < (y+ylen); ytemp++){
-				if (ytemp < 0 || ytemp > ysize) return false;
+				if (ytemp < 0 or ytemp > ysize) return false;
 				for (int xtemp = (x-xlen/2); xtemp < (x+(xlen+1)/2); xtemp++){
-					if (xtemp < 0 || xtemp > xsize) return false;
-					if (getCell(xtemp, ytemp) != tileUnused) return false;
+					if (xtemp < 0 or xtemp > xsize) return false;
+					if (getCell(xtemp, ytemp) ~= tileUnused) return false;
 				}
 			}
  
@@ -243,10 +252,10 @@ local dungen = {}
 		case 3:
 		-- west
 			for (int ytemp = (y-ylen/2); ytemp < (y+(ylen+1)/2); ytemp++){
-				if (ytemp < 0 || ytemp > ysize) return false;
+				if (ytemp < 0 or ytemp > ysize) return false;
 				for (int xtemp = x; xtemp > (x-xlen); xtemp--){
-					if (xtemp < 0 || xtemp > xsize) return false;
-					if (getCell(xtemp, ytemp) != tileUnused) return false; 
+					if (xtemp < 0 or xtemp > xsize) return false;
+					if (getCell(xtemp, ytemp) ~= tileUnused) return false; 
 				}
 			}
  
@@ -396,24 +405,24 @@ local dungen = {}
 				newy = getRand(1, ysize-1);
 				validTile = -1;
 				-- System.out.println("tempx: " + newx + "\ttempy: " + newy);
-				if (getCell(newx, newy) == tileDirtWall || getCell(newx, newy) == tileCorridor){
+				if (getCell(newx, newy) == tileDirtWall or getCell(newx, newy) == tileCorridor){
 					-- check if we can reach the place
-					if (getCell(newx, newy+1) == tileDirtFloor || getCell(newx, newy+1) == tileCorridor){
+					if (getCell(newx, newy+1) == tileDirtFloor or getCell(newx, newy+1) == tileCorridor){
 						validTile = 0; -- 
 						xmod = 0;
 						ymod = -1;
 					}
-					else if (getCell(newx-1, newy) == tileDirtFloor || getCell(newx-1, newy) == tileCorridor){
+					else if (getCell(newx-1, newy) == tileDirtFloor or getCell(newx-1, newy) == tileCorridor){
 						validTile = 1; -- 
 						xmod = +1;
 						ymod = 0;
 					}
-					else if (getCell(newx, newy-1) == tileDirtFloor || getCell(newx, newy-1) == tileCorridor){
+					else if (getCell(newx, newy-1) == tileDirtFloor or getCell(newx, newy-1) == tileCorridor){
 						validTile = 2; -- 
 						xmod = 0;
 						ymod = +1;
 					}
-					else if (getCell(newx+1, newy) == tileDirtFloor || getCell(newx+1, newy) == tileCorridor){
+					else if (getCell(newx+1, newy) == tileDirtFloor or getCell(newx+1, newy) == tileCorridor){
 						validTile = 3; -- 
 						xmod = -1;
 						ymod = 0;
@@ -472,7 +481,7 @@ local dungen = {}
 		int newy = 0;
 		int ways = 0; -- from how many directions we can reach the random spot from
 		int state = 0; -- the state the loop is in, start with the stairs
-		while (state != 10){
+		while (state ~= 10){
 			for (int testing = 0; testing < 1000; testing++){
 				newx = getRand(1, xsize-1);
 				newy = getRand(1, ysize-2); -- cheap bugfix, pulls down newy to 0<y<24, from 0<y<25
@@ -481,24 +490,24 @@ local dungen = {}
 				ways = 4; -- the lower the better
  
 				-- check if we can reach the spot
-				if (getCell(newx, newy+1) == tileDirtFloor || getCell(newx, newy+1) == tileCorridor){
+				if (getCell(newx, newy+1) == tileDirtFloor or getCell(newx, newy+1) == tileCorridor){
 				-- north
-					if (getCell(newx, newy+1) != tileDoor)
+					if (getCell(newx, newy+1) ~= tileDoor)
 					ways--;
 				}
-				if (getCell(newx-1, newy) == tileDirtFloor || getCell(newx-1, newy) == tileCorridor){
+				if (getCell(newx-1, newy) == tileDirtFloor or getCell(newx-1, newy) == tileCorridor){
 				-- east
-					if (getCell(newx-1, newy) != tileDoor)
+					if (getCell(newx-1, newy) ~= tileDoor)
 					ways--;
 				}
-				if (getCell(newx, newy-1) == tileDirtFloor || getCell(newx, newy-1) == tileCorridor){
+				if (getCell(newx, newy-1) == tileDirtFloor or getCell(newx, newy-1) == tileCorridor){
 				-- south
-					if (getCell(newx, newy-1) != tileDoor)
+					if (getCell(newx, newy-1) ~= tileDoor)
 					ways--;
 				}
-				if (getCell(newx+1, newy) == tileDirtFloor || getCell(newx+1, newy) == tileCorridor){
+				if (getCell(newx+1, newy) == tileDirtFloor or getCell(newx+1, newy) == tileCorridor){
 				-- west
-					if (getCell(newx+1, newy) != tileDoor)
+					if (getCell(newx+1, newy) ~= tileDoor)
 					ways--;
 				}
  
