@@ -24,7 +24,7 @@ print("globalData loaded")
 --------------------------------------------------------------------------------
 
 -- Create GLOBAL variables for positioning
-GD.orientation
+GD.orientation = system.orientation				-- Device orientation
 GD.screenWidth = display.contentWidth           -- Screen width
 GD.screenHeight = display.contentHeight         -- Screen height
 GD.screenTop = 0                                -- Screen Top

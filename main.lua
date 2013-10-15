@@ -30,7 +30,8 @@ display.setDefault( "background", 255, 255, 255 )
 display.setStatusBar( display.HiddenStatusBar ) -- Hide status bar from the beginning
 
 -- Import modules
-local appGlobals = require("globalData")
+local appGlobals = require("globalData")			-- Load Global data
+local utils = require("utilities")					-- Load utilities
 local json = require ("json")						-- Load JSON
 local storyboard = require ("storyboard")			-- Load Storyboard
 
@@ -41,46 +42,14 @@ storyboard.purgeOnSceneChange = true
 
 
 
-
--- GLOBAL FUNCTION TO PRINT TABLE
---------------------------------------------------------------------------------
--- Print contents of a table
-function tprint(tbl, indent)
-	--print("Printing contents of table")
-	if not indent then indent = 0 end
-	for k, v in pairs(tbl) do
-		formatting = string.rep(" ", indent) .. k ..": "
-		if type(v) == "table" then
-			print(formatting)
-			tprint(v, indent+1)
-		else
-			print(formatting .. tostring(v))
-		end
-	end
-end
-
--- GLOBAL FUNCTION TO DEEP COPY A TABLE
---------------------------------------------------------------------------------
-function deepcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[deepcopy(orig_key)] = deepcopy(orig_value)
-        end
-        setmetatable(copy, deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
-
-
 -- #############################################################################
 -- START APP
 -- #############################################################################
 
 -- go to file "menu.lua" use "fade" and take 400ms
 storyboard.gotoScene( "scenetemplate", "fade", 200 )
+
+
+-- #############################################################################
+-- Load debug modules
+-- #############################################################################

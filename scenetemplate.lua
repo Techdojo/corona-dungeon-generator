@@ -4,7 +4,12 @@
 --
 ----------------------------------------------------------------------------------
 
-local storyboard = require( "storyboard" )
+local appGlobals = require("globalData")			-- Load Global data
+local utils = require("utilities")					-- Load utilities
+local storyboard = require( "storyboard" )			-- Load storyboard
+local dunGen = require("dungeon_gen")
+-- local dog = require("dog")
+-- local cat = require("cat")
 local scene = storyboard.newScene()
 
 ----------------------------------------------------------------------------------
@@ -31,6 +36,11 @@ function scene:createScene( event )
 	
 	-----------------------------------------------------------------------------
 	
+	dunGen.createDungeon(70,30,5)
+	-- local dog1 = dog.new("Yai-Ya", 4)
+	-- dog1:printAge()
+
+	-- local cat1 = cat.new("fluffy", 7)
 end
 
 
