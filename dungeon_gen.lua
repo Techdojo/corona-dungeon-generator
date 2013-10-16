@@ -4,7 +4,7 @@
 	File: gungeon_gen.lua
 	
 	Description: 
-	Collection of common useful functions
+	
 
 	Date: 
 
@@ -234,7 +234,16 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 for walking on, the rest is walls)
 	local xlen = getRand(4, xlength) -- getRand(4, xlength)
 	local ylen = getRand(4, ylength) -- getRand(4, ylength)
+
+	print("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
 	print("Room size: " .. xlen .. " X " .. ylen)
+
+	local xStart
+	local yStart
+	local xEnd
+	local yEnd
+	local xtemp
+	local ytemp
 
 	--the tile type it's going to be filled with
 	local floor = tileDirtFloor
@@ -249,264 +258,93 @@ local function makeRoom(x, y, xlength, ylength, direction)
 
 	if dir == 0 then		-- Build northwards
 		-- print("North")
-		local xStart = math.floor(x - (xlen / 2))
-		local yStart = math.floor(y + (ylen / 2))
-		local xtemp = xStart
-		local ytemp = yStart
-		local xEnd = xStart + xlen - 1
-		local yEnd = yStart - ylen - 1
-		print("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
-
-		-- Check if there is enough room for the room
-		print("Check space for room")
-		for i = 1, ylen do
-			-- Check room starts at the top or max width
-			if ytemp <= 0 or ytemp >= ysize then print("Err: Room y is outside the borders - return false") return false end
-			for j = 1, xlen do
-				-- print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp)
-				if xtemp <= 0 or xtemp >= xsize then print("Err: Room x is outside the borders - return false") return false end
-				if getCell(xtemp, ytemp) ~= tileUnused then print("Err: Room collides with another room - return false") print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) return false end -- no space left...
-				xtemp = xtemp + 1
-				j = j + 1
-			end
-			xtemp = xStart			-- reset xtemp
-			ytemp = ytemp - 1 		-- add 1 to ytemp
-			i = i + 1 				-- add 1 to ytemp
-		end
-
-		-- we're still here, build
-		print("Start building room")
+		xStart = math.floor(x - (xlen / 2))
+		yStart = math.floor(y - ylen + 1)
+		xEnd = math.floor(xStart + xlen - 1)
+		yEnd = math.floor(y)
 		xtemp = xStart
 		ytemp = yStart
-
-		for i = 1, ylen do
-			for j = 1, xlen do
-				-- start room columns
-				-- print("xtemp: " .. xtemp)
-				if xtemp == xStart then
-					-- print("Starting corner - xtemp: " .. xtemp .. " = xStart: " .. xStart)
-					setCell(xtemp, ytemp, wall)
-				elseif xtemp == xEnd then
-					-- print("End corner - xtemp: " .. xtemp .. " = xEnd: " .. xEnd)
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == yStart then
-					-- print("xtemp: " .. ytemp .. " = yStart: " .. yStart)
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == (yStart-ylen+1) then
-					-- print("ytemp: " .. ytemp .. " = yStart-ylen+1: " .. (yStart-ylen+1))
-					setCell(xtemp, ytemp, wall)
-				else
-					-- print("add floor tile")
-					setCell(xtemp, ytemp, floor)	-- otherwise fill with the floor
-				end
-				xtemp = xtemp + 1
-				j = j + 1
-			end
-			
-			xtemp = xStart 			-- reset xtemp
-			-- print("ytemp: " .. ytemp)
-			ytemp = ytemp - 1
-			i = i - 1
-		end
-		
-	elseif dir == 1 then
+	elseif dir == 1 then -- Build east
 		-- print("East")
-		local xEnd = xStart + xlen - 1
-		local yEnd = yStart - ylen - 1
-		print("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
-
-		-- Check if there is enough room for the room
-		print("Check space for room")
-		for i = 1, ylen do
-			-- Check room starts at the top or max width
-			if ytemp <= 0 or ytemp >= ysize then print("Err: Room y is outside the borders - return false") return false end
-			for j = 1, xlen do
-				-- print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp)
-				if xtemp <= 0 or xtemp >= xsize then print("Err: Room x is outside the borders - return false") return false end
-				if getCell(xtemp, ytemp) ~= tileUnused then print("Err: Room collides with another room - return false") print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) return false end -- no space left...
-				xtemp = xtemp + 1
-				j = j + 1
-			end
-			xtemp = xStart			-- reset xtemp
-			ytemp = ytemp - 1 		-- add 1 to ytemp
-			i = i + 1 				-- add 1 to ytemp
-		end
-
-		-- we're still here, build
-		print("Start building room")
+		xStart = math.floor(x)
+		yStart = math.floor(y - (ylen/2))
+		xEnd = math.floor(xStart + xlen - 1)
+		yEnd = math.floor(yStart + ylen - 1)
 		xtemp = xStart
 		ytemp = yStart
-
-		for i = 1, ylen do
-			for j = 1, xlen do
-				-- start room columns
-				-- print("xtemp: " .. xtemp)
-				if xtemp == xStart then
-					-- print("Starting corner - xtemp: " .. xtemp .. " = xStart: " .. xStart)
-					setCell(xtemp, ytemp, wall)
-				elseif xtemp == xEnd then
-					-- print("End corner - xtemp: " .. xtemp .. " = xEnd: " .. xEnd)
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == yStart then
-					-- print("xtemp: " .. ytemp .. " = yStart: " .. yStart)
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == (yStart-ylen+1) then
-					-- print("ytemp: " .. ytemp .. " = yStart-ylen+1: " .. (yStart-ylen+1))
-					setCell(xtemp, ytemp, wall)
-				else
-					-- print("add floor tile")
-					setCell(xtemp, ytemp, floor)	-- otherwise fill with the floor
-				end
-				xtemp = xtemp + 1
-				j = j + 1
-			end
-			
-			xtemp = xStart 			-- reset xtemp
-			-- print("ytemp: " .. ytemp)
-			ytemp = ytemp - 1
-			i = i - 1
-		end
-
-
-
-
-		local ytemp = math.floor(y-ylen/2)
-		local xtemp = math.floor(x)
-		print("ytemp is: " .. ytemp .. " and xtemp is: " .. xtemp)
-
-		while ytemp < (y+(ylen+1)/2) do
-			if ytemp < 0 or ytemp > ysize then
-				return false
-			end
-			while xtemp < (x+xlen) do
-				if xtemp < 0 or xtemp > xsize then
-					return false
-				end
-				if getCell(xtemp, ytemp) ~= tileUnused then
-					return false
-				end
-
-				xtemp = xtemp + 1
-			end
-
-			ytemp = ytemp + 1
-		end
-
-		ytemp = math.floor(y-ylen/2)
-		xtemp = math.floor(x)
-		while ytemp < (y+(ylen+1)/2) do
-			while xtemp < (x+xlen) do
-
-				if xtemp == x then
-					setCell(xtemp, ytemp, wall)
-				elseif xtemp == (x+xlen-1) then
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == (y-ylen/2) then
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == (y+(ylen-1)/2) then
-					setCell(xtemp, ytemp, wall)
-				else
-					setCell(xtemp, ytemp, floor)
-				end
-
-				xtemp = xtemp + 1
-			end
-
-			ytemp = ytemp + 1
-		end
-		
-	elseif dir == 2 then
-		print("South")
-		-- south
-		local ytemp = math.floor(y)
-		local xtemp = math.floor(x-xlen/2)
-		print("ytemp is: " .. ytemp .. " and xtemp is: " .. xtemp)
-
-		while ytemp < (y+ylen) do
-			if ytemp < 0 or ytemp > ysize then
-				return false
-			end
-			while xtemp < (x+(xlen+1)/2) do
-				if xtemp < 0 or xtemp > xsize then
-					return false
-				end
-				if getCell(xtemp, ytemp) ~= tileUnused then
-					return false
-				end
-
-				xtemp = xtemp + 1
-			end
-
-			ytemp = ytemp + 1
-		end
-
-		ytemp = math.floor(y)
-		xtemp = math.floor(x-xlen/2)
-		while ytemp < (y+ylen) do
-			while xtemp < (x+(xlen+1)/2) do
-
-				if xtemp == (x-xlen/2) then
-					setCell(xtemp, ytemp, wall)
-				elseif xtemp == (x+(xlen-1)/2) then
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == y then
-					setCell(xtemp, ytemp, wall)
-				elseif ytemp == (y+ylen-1) then
-					setCell(xtemp, ytemp, wall)
-				else
-					setCell(xtemp, ytemp, floor)
-				end
-
-				xtemp = xtemp + 1
-			end
-
-			ytemp = ytemp + 1
-		end
-		
-	elseif dir == 3 then
-		print("West")
-		-- west
-		local ytemp = math.floor(y-ylen/2)
-		local xtemp = math.floor(x)
-		print("ytemp is: " .. ytemp .. " and xtemp is: " .. xtemp)
-
-		while ytemp < (y+(ylen+1)/2) do
-			if ytemp < 0 or ytemp > ysize then
-				return false
-			end
-
-			while xtemp > (x-xlen) do
-				if xtemp < 0 or xtemp > xsize then
-					return false
-				end
-
-				if getCell(xtemp, ytemp) ~= tileUnused then
-					return false
-				end
-
-				xtemp = xtemp - 1
-			end
-			ytemp = ytemp + 1
-		end
-
-		ytemp = math.floor(y-ylen/2)
-		xtemp = math.floor(x)
-		while ytemp < (y+(ylen+1)/2) do
-			while xtemp > (x-xlen) do
-
-				if xtemp == x then setCell(xtemp, ytemp, wall)
-				elseif xtemp == (x-xlen+1) then setCell(xtemp, ytemp, wall)
-				elseif ytemp == (y-ylen/2) then setCell(xtemp, ytemp, wall)
-				elseif ytemp == (y+(ylen-1)/2) then setCell(xtemp, ytemp, wall)
-				else setCell(xtemp, ytemp, floor) end
-
-				xtemp = xtemp - 1
-			end
-
-			ytemp = ytemp + 1
-		end
-		
+	elseif dir == 2 then -- Build south
+		-- print("South")
+		xStart = math.floor(x - (xlen / 2))
+		yStart = math.floor(y)
+		xEnd = math.floor((xStart + xlen) - 1)
+		yEnd = math.floor(y + ylen - 1)
+		xtemp = xStart
+		ytemp = yStart
+	elseif dir == 3 then 	-- Build west
+		-- print("South")
+		xStart = math.floor(x - xlen + 1)
+		yStart = math.floor(y - (ylen / 2))
+		xEnd = math.floor(x)
+		yEnd = math.floor(yStart + ylen - 1)
+		xtemp = xStart
+		ytemp = yStart
 	end
+
+	print("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+	-- Check if there is enough room for the room
+	print("Check space for room")
+	for i = 1, ylen do
+		-- Check room starts at the top or max width
+		if ytemp <= 1 or ytemp > ysize then print("Err: Room y is outside the borders - return false") return false end
+		for j = 1, xlen do
+			-- print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp)
+			if xtemp <= 0 or xtemp > xsize then print("Err: Room x is outside the borders - return false") return false end
+			if getCell(xtemp, ytemp) ~= tileUnused then print("Err: Room collides with another room - return false") print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) return false end -- no space left...
+			xtemp = xtemp + 1
+			j = j + 1
+		end
+		xtemp = xStart			-- reset xtemp
+		ytemp = ytemp + 1 		-- add 1 to ytemp
+		i = i + 1 				-- add 1 to ytemp
+	end
+
+	-- we're still here, build
+	print("Start building room")
+	xtemp = xStart
+	ytemp = yStart
+
+	for i = 1, ylen do
+		for j = 1, xlen do
+			-- start room columns
+			-- print("xtemp: " .. xtemp)
+			if xtemp == xStart then
+				-- print("Starting corner - xtemp: " .. xtemp .. " = xStart: " .. xStart)
+				setCell(xtemp, ytemp, wall)
+			elseif xtemp == xEnd then
+				-- print("End corner - xtemp: " .. xtemp .. " = xEnd: " .. xEnd)
+				setCell(xtemp, ytemp, wall)
+			elseif ytemp == yStart then
+				-- print("xtemp: " .. ytemp .. " = yStart: " .. yStart)
+				setCell(xtemp, ytemp, wall)
+			elseif ytemp == yEnd then
+				-- print("ytemp: " .. ytemp .. " = yStart-ylen+1: " .. (yStart-ylen+1))
+				setCell(xtemp, ytemp, wall)
+			else
+				-- print("add floor tile")
+				setCell(xtemp, ytemp, floor)	-- otherwise fill with the floor
+			end
+			-- print("xtemp: " .. xtemp)
+			xtemp = xtemp + 1
+			
+			j = j + 1
+		end
+		
+		xtemp = xStart 			-- reset xtemp
+		-- print("ytemp: " .. ytemp)
+		ytemp = ytemp + 1
+		i = i + 1
+	end
+	
 
 	-- yay, all done
 	return true
@@ -638,7 +476,7 @@ function dunGen.createDungeon( intx, inty, intobj )
 	-- *******************************************************************************/
 
 	-- start with making a room in the middle, which we can start building upon
-	makeRoom(xsize/2, ysize/2, 10, 10, 0); -- getRand(0,3)
+	makeRoom(xsize/2, ysize/2, 7, 7, getRand(0,3));
 
 	-- keep count of the number of "objects" we've made
 	currentFeatures = 1; -- +1 for the first room we just made
