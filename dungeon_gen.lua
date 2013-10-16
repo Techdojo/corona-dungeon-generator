@@ -237,8 +237,8 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	local xlen = getRand(4, xlength)
 	local ylen = getRand(4, ylength)
 	--the tile type it's going to be filled with
-	local floor = tileDirtFloor -- jordgolv..
-	local wall = tileDirtWall -- jordv????gg
+	local floor = tileDirtFloor
+	local wall = tileDirtWall
 
 	-- choose the way it's pointing at
 	local dir = 0
@@ -255,7 +255,9 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		local xtemp = math.floor(x-xlen/2)
 		print("ytemp is: " .. ytemp .. " and xtemp is: " .. xtemp)
 
+		-- Check if there is enough room for the room
 		while ytemp > (y-ylen) do
+			-- Check room starts at the top or max width
 			if ytemp < 0 or ytemp > ysize then
 				print("return false 1")
 				return false
@@ -282,11 +284,12 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		xtemp = math.floor(x-xlen/2)
 		-- we're still here, build
 		while ytemp > (y-ylen) do
-			while xtemp < (x+(xlen+1)/2) do
+			print(ytemp .. " > " .. math.floor(y-ylen))
+			while xtemp < math.floor(x+(xlen+1)/2) do
 				-- start with the walls
-				if xtemp == (x-xlen/2) then
+				if xtemp == math.floor(x-xlen/2) then
 					setCell(xtemp, ytemp, wall)
-				elseif xtemp == (x+(xlen-1)/2) then
+				elseif xtemp == math.floor(x+(xlen-1)/2) then
 					setCell(xtemp, ytemp, wall)
 				elseif ytemp == y then
 					setCell(xtemp, ytemp, wall)
@@ -453,18 +456,25 @@ end
 local function showDungeon() 
 	-- print("showDungeon called")
 
+	local topRow = "top 123456789*123456789*123456789*123456789*123456789*123456789*123456789*"
+	print(topRow)
+
 	local mapRow
 
 	for y = 1, ysize do
 
-		mapRow = "R|  "
+		if y < 10 then
+			mapRow = "0" .. y .. "| "
+		else
+			mapRow = y .. "| "
+		end
 
 		for x = 1, xsize do
 			-- System.out.print(getCell(x, y));
 			local cell = getCell(x, y)
 
 			if cell == tileUnused then
-				mapRow = mapRow .. "%"			-- empty cell, change to '%' to see the cell
+				mapRow = mapRow .. " "			-- empty cell, change to '%' to see the cell
 			elseif cell == tileDirtWall then
 				mapRow = mapRow .. "+"
 			elseif cell == tileDirtFloor then
@@ -565,7 +575,7 @@ function dunGen.createDungeon( intx, inty, intobj )
 	-- *******************************************************************************/
 
 	-- start with making a room in the middle, which we can start building upon
-	makeRoom(xsize/2, ysize/2, 8, 6, 0); -- getRand(0,3)
+	makeRoom(xsize/2, ysize/2, 10, 10, 0); -- getRand(0,3)
 
 	-- keep count of the number of "objects" we've made
 	currentFeatures = 1; -- +1 for the first room we just made
