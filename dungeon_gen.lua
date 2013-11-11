@@ -106,8 +106,63 @@ local function getRand(min, max)
 	return rand
 end
 
+-- used to print the map on the console
+local function showDungeon() 
+	-- print("showDungeon called")
+
+	local decRow = "             1         2         3         4         5         6         7"
+	print(decRow)
+	local topRow = "top 1234567890123456789012345678901234567890123456789012345678901234567890"
+	print(topRow)
+
+	local mapRow
+
+	for y = 1, ysize do
+
+		if y < 10 then
+			mapRow = "0" .. y .. "| "
+		else
+			mapRow = y .. "| "
+		end
+
+		for x = 1, xsize do
+			-- System.out.print(getCell(x, y));
+			local cell = getCell(x, y)
+
+			if cell == tileUnused then
+				mapRow = mapRow .. " "			-- empty cell, change to '%' to see the cell
+			elseif cell == tileDirtWall then
+				mapRow = mapRow .. "+"
+			elseif cell == tileDirtFloor then
+				mapRow = mapRow .. "."
+			elseif cell == tileStoneWall then
+				mapRow = mapRow .. "N"
+			elseif cell == tileCorridor then
+				mapRow = mapRow .. "#"
+			elseif cell == tileDoor then
+				mapRow = mapRow .. "D"
+			elseif cell == tileUpStairs then
+				mapRow = mapRow .. "<"
+			elseif cell == tileDownStairs then
+				mapRow = mapRow .. ">"
+			elseif cell == tileChest then
+				mapRow = mapRow .. "*"
+			end
+			
+			x = x + 1
+		end
+
+		if (xsize <= xmax) then
+			print(mapRow)
+		end
+
+		y = y + 1
+	end
+end
+
 
 local function makeCorridor(x, y, lenght, direction)
+	print("Make corridor")
 	-- define the dimensions of the corridor (er.. only the width and height..)
 	local len = getRand(2, lenght)
 	local floor = tileCorridor
@@ -230,10 +285,10 @@ local function makeCorridor(x, y, lenght, direction)
 end
 
 local function makeRoom(x, y, xlength, ylength, direction)
-	print("Make a room")
+	print("Make room")
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 for walking on, the rest is walls)
-	local xlen = getRand(4, xlength) -- getRand(4, xlength)
-	local ylen = getRand(4, ylength) -- getRand(4, ylength)
+	local xlen = getRand(4, xlength)
+	local ylen = getRand(4, ylength)
 
 	print("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
 	print("Room size: " .. xlen .. " X " .. ylen)
@@ -351,59 +406,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 end
 
 
--- used to print the map on the console
-local function showDungeon() 
-	-- print("showDungeon called")
 
-	local decRow = "             1         2         3         4         5         6         7"
-	print(decRow)
-	local topRow = "top 1234567890123456789012345678901234567890123456789012345678901234567890"
-	print(topRow)
-
-	local mapRow
-
-	for y = 1, ysize do
-
-		if y < 10 then
-			mapRow = "0" .. y .. "| "
-		else
-			mapRow = y .. "| "
-		end
-
-		for x = 1, xsize do
-			-- System.out.print(getCell(x, y));
-			local cell = getCell(x, y)
-
-			if cell == tileUnused then
-				mapRow = mapRow .. " "			-- empty cell, change to '%' to see the cell
-			elseif cell == tileDirtWall then
-				mapRow = mapRow .. "+"
-			elseif cell == tileDirtFloor then
-				mapRow = mapRow .. "."
-			elseif cell == tileStoneWall then
-				mapRow = mapRow .. "N"
-			elseif cell == tileCorridor then
-				mapRow = mapRow .. "#"
-			elseif cell == tileDoor then
-				mapRow = mapRow .. "D"
-			elseif cell == tileUpStairs then
-				mapRow = mapRow .. "<"
-			elseif cell == tileDownStairs then
-				mapRow = mapRow .. ">"
-			elseif cell == tileChest then
-				mapRow = mapRow .. "*"
-			end
-			
-			x = x + 1
-		end
-
-		if (xsize <= xmax) then
-			print(mapRow)
-		end
-
-		y = y + 1
-	end
-end
 
 -------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -480,6 +483,112 @@ function dunGen.createDungeon( intx, inty, intobj )
 
 	-- keep count of the number of "objects" we've made
 	currentFeatures = 1; -- +1 for the first room we just made
+
+
+	-- then we sart the main loop
+	local countingTries = 0
+	local testing = 0
+	for countingTries = 0, 100 do 	-- 0, 1000
+		print("countingTries: " .. countingTries)
+		-- check if we've reached our quota
+		if currentFeatures == objects then
+			break
+		end
+
+		-- start with a random wall
+		local newx = 0
+		local xmod = 0
+		local newy = 0
+		local ymod = 0
+		local validTile = -1
+		-- print("validTile is:" .. validTile)
+
+
+		-- 1000 chances to find a suitable object (room or corridor)..
+		-- (yea, i know it's kinda ugly with a for-loop... -_-')
+		for testing = 0, 100 do 	-- 0, 1000
+			print("testing: " .. testing)
+
+			newx = getRand(1, xsize-1)
+			newy = getRand(1, ysize-1)
+			validTile = -1
+
+			-- print("tempx: " + newx + "\ntempy: " + newy)
+			if getCell(newx, newy) == tileDirtWall or getCell(newx, newy) == tileCorridor then
+				-- check if we can reach the place
+				if getCell(newx, newy+1) == tileDirtFloor or getCell(newx, newy+1) == tileCorridor then
+					validTile = 0
+					xmod = 0
+					ymod = -1
+				elseif getCell(newx-1, newy) == tileDirtFloor or getCell(newx-1, newy) == tileCorridor then
+					validTile = 1
+					xmod = 1
+					ymod = 0
+				elseif getCell(newx, newy-1) == tileDirtFloor or getCell(newx, newy-1) == tileCorridor then
+					validTile = 2
+					xmod = 0
+					ymod = 1
+				elseif getCell(newx+1, newy) == tileDirtFloor or getCell(newx+1, newy) == tileCorridor then
+					validTile = 3
+					xmod = -1
+					ymod = 0
+				end
+
+				-- check that we haven't got another door nearby, so we won't get alot of openings besides
+				-- each other
+				if validTile > -1 then
+					if getCell(newx, newy+1) == tileDoor then 		-- north
+						validTile = -1
+					elseif getCell(newx-1, newy) == tileDoor then 	-- east
+						validTile = -1
+					elseif getCell(newx, newy-1) == tileDoor then	-- south
+						validTile = -1
+					elseif getCell(newx+1, newy) == tileDoor then	-- west
+						validTile = -1
+					end
+				end
+
+				-- if we can, jump out of the loop and continue with the rest
+				if validTile > -1 then
+					break
+				end
+			end
+
+			testing = testing + 1
+		end -- end for testing loop
+
+		if validTile > -1 then
+			-- choose what to build now at our newly found place, and at what direction
+			local feature = getRand(0, 100)
+			print("Feature is: " .. feature)
+
+			if feature <= chanceRoom then -- a new room
+				-- print("Make room")
+				if makeRoom((newx+xmod), (newy+ymod), 8, 6, validTile) then
+					currentFeatures = currentFeatures + 1 --add to our quota
+
+					-- then we mark the wall opening with a door
+					setCell(newx, newy, tileDoor)
+
+					-- clean up infront of the door so we can reach it
+					setCell((newx+xmod), (newy+ymod), tileDirtFloor)
+				end
+			elseif feature >= chanceRoom then -- new corridor
+				print("Make corridor")
+				if makeCorridor((newx+xmod), (newy+ymod), 6, validTile) then
+					-- same thing here, add to the quota and a door
+					currentFeatures = currentFeatures + 1
+
+					setCell(newx, newy, tileDoor)
+				end
+			end
+		end
+
+
+		countingTries = countingTries + 1
+	end
+
+
 
 
 
