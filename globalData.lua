@@ -35,4 +35,7 @@ GD.screenCenterX = display.contentWidth/2       -- Horizontal Center
 GD.screenCenterY = display.contentHeight/2      -- Vertical Center
 
 -- 
+GD.debugging = false
+
+-- 
 return GD

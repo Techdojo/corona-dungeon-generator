@@ -162,7 +162,7 @@ end
 
 
 local function makeCorridor(x, y, lenght, direction)
-	print("Make corridor")
+	utils.dbprint("Make corridor")
 	-- define the dimensions of the corridor (er.. only the width and height..)
 	local len = getRand(2, lenght)
 	local floor = tileCorridor
@@ -285,13 +285,13 @@ local function makeCorridor(x, y, lenght, direction)
 end
 
 local function makeRoom(x, y, xlength, ylength, direction)
-	print("Make room")
+	utils.dbprint("Start room building")
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 for walking on, the rest is walls)
 	local xlen = getRand(4, xlength)
 	local ylen = getRand(4, ylength)
 
-	print("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
-	print("Room size: " .. xlen .. " X " .. ylen)
+	utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
+	utils.dbprint("Room size: " .. xlen .. " X " .. ylen)
 
 	local xStart
 	local yStart
@@ -345,16 +345,26 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		ytemp = yStart
 	end
 
-	print("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+	utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
 	-- Check if there is enough room for the room
-	print("Check space for room")
+	utils.dbprint("Check space for room")
 	for i = 1, ylen do
 		-- Check room starts at the top or max width
-		if ytemp <= 1 or ytemp > ysize then print("Err: Room y is outside the borders - return false") return false end
+		if ytemp <= 1 or ytemp > ysize then 
+			utils.dbprint("Err: Room y is outside the borders - return false") 
+			return false
+		end
 		for j = 1, xlen do
 			-- print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp)
-			if xtemp <= 0 or xtemp > xsize then print("Err: Room x is outside the borders - return false") return false end
-			if getCell(xtemp, ytemp) ~= tileUnused then print("Err: Room collides with another room - return false") print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) return false end -- no space left...
+			if xtemp <= 0 or xtemp > xsize then 
+				utils.dbprint("Err: Room x is outside the borders - return false") 
+				return false
+			end
+			if getCell(xtemp, ytemp) ~= tileUnused then 
+				utils.dbprint("Err: Room collides with another room - return false") 
+				utils.dbprint("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) 
+				return false
+			end -- no space left...
 			xtemp = xtemp + 1
 			j = j + 1
 		end
@@ -364,7 +374,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	end
 
 	-- we're still here, build
-	print("Start building room")
+	utils.dbprint("Start building room")
 	xtemp = xStart
 	ytemp = yStart
 
@@ -413,7 +423,9 @@ end
 -------------------------------------------------
 
 function dunGen.createDungeon( intx, inty, intobj )
-	print("dunGen.createDungeon called")
+
+
+	utils.dbprint("dunGen.createDungeon called")
 
 	if intobj < 1 then 
 		objects = 10
@@ -441,9 +453,9 @@ function dunGen.createDungeon( intx, inty, intobj )
 		ysize = inty 
 	end
 
-	print(msgXSize .. xsize)
-	print(msgYSize .. ysize)
-	print(msgMaxObjects .. objects)
+	utils.dbprint(msgXSize .. xsize)
+	utils.dbprint(msgYSize .. ysize)
+	utils.dbprint(msgMaxObjects .. objects)
 
 	-- redefine the map var, so it's adjusted to our new map size
 	-- for y=1, ysize do
@@ -488,8 +500,8 @@ function dunGen.createDungeon( intx, inty, intobj )
 	-- then we sart the main loop
 	local countingTries = 0
 	local testing = 0
-	for countingTries = 0, 100 do 	-- 0, 1000
-		print("countingTries: " .. countingTries)
+	for countingTries = 0, 10 do 	-- 0, 1000
+		-- print("countingTries: " .. countingTries)
 		-- check if we've reached our quota
 		if currentFeatures == objects then
 			break
@@ -506,8 +518,8 @@ function dunGen.createDungeon( intx, inty, intobj )
 
 		-- 1000 chances to find a suitable object (room or corridor)..
 		-- (yea, i know it's kinda ugly with a for-loop... -_-')
-		for testing = 0, 100 do 	-- 0, 1000
-			print("testing: " .. testing)
+		for testing = 0, 10 do 	-- 0, 1000
+			-- print("testing: " .. testing)
 
 			newx = getRand(1, xsize-1)
 			newy = getRand(1, ysize-1)
@@ -560,10 +572,10 @@ function dunGen.createDungeon( intx, inty, intobj )
 		if validTile > -1 then
 			-- choose what to build now at our newly found place, and at what direction
 			local feature = getRand(0, 100)
-			print("Feature is: " .. feature)
+			-- print("Feature is: " .. feature)
 
 			if feature <= chanceRoom then -- a new room
-				-- print("Make room")
+				utils.dbprint("Make room")
 				if makeRoom((newx+xmod), (newy+ymod), 8, 6, validTile) then
 					currentFeatures = currentFeatures + 1 --add to our quota
 
@@ -574,7 +586,7 @@ function dunGen.createDungeon( intx, inty, intobj )
 					setCell((newx+xmod), (newy+ymod), tileDirtFloor)
 				end
 			elseif feature >= chanceRoom then -- new corridor
-				print("Make corridor")
+				utils.dbprint("Make corridor")
 				if makeCorridor((newx+xmod), (newy+ymod), 6, validTile) then
 					-- same thing here, add to the quota and a door
 					currentFeatures = currentFeatures + 1

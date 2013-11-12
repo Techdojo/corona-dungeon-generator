@@ -17,6 +17,10 @@
 ------------------------------------------------------------------------------]]
 
 -- 
+local GD = require("globalData")					-- Load Global data
+print("dubugging is: " .. tostring(GD.debugging))
+
+-- 
 local utils = {}
 print("utilities module loaded")
 
@@ -56,6 +60,16 @@ utils.deepcopy = function(orig)
         copy = orig
     end
     return copy
+end
+
+--
+--------------------------------------------------------------------------------
+utils.dbprint = function(message)
+	print("dbprint called")
+	local msg = message
+	if GD.debugging == true then
+		print(msg)
+	end
 end
 
 

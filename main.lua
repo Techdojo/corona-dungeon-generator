@@ -30,7 +30,7 @@ display.setDefault( "background", 255, 255, 255 )
 display.setStatusBar( display.HiddenStatusBar ) -- Hide status bar from the beginning
 
 -- Import modules
-local appGlobals = require("globalData")			-- Load Global data
+local GD = require("globalData")					-- Load Global data
 local utils = require("utilities")					-- Load utilities
 local json = require ("json")						-- Load JSON
 local storyboard = require ("storyboard")			-- Load Storyboard
