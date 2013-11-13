@@ -15,9 +15,9 @@
 	
 ------------------------------------------------------------------------------]]
 
--- 
+-- print("globalData loaded")
 local GD = {}
-print("globalData loaded")
+
 
 
 -- GLOBAL VARIABLES
@@ -35,7 +35,7 @@ GD.screenCenterX = display.contentWidth/2       -- Horizontal Center
 GD.screenCenterY = display.contentHeight/2      -- Vertical Center
 
 -- 
-GD.debugging = false
+GD.debugging = true
 
 -- 
 return GD

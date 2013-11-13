@@ -18,11 +18,11 @@
 
 -- 
 local GD = require("globalData")					-- Load Global data
-print("dubugging is: " .. tostring(GD.debugging))
+
 
 -- 
 local utils = {}
-print("utilities module loaded")
+-- print("utilities module loaded")
 
 
 -- GLOBAL VARIABLES
@@ -65,7 +65,7 @@ end
 --
 --------------------------------------------------------------------------------
 utils.dbprint = function(message)
-	print("dbprint called")
+	-- print("dbprint called")
 	local msg = message
 	if GD.debugging == true then
 		print(msg)

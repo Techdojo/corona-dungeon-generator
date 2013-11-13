@@ -36,11 +36,9 @@ function scene:createScene( event )
 	
 	-----------------------------------------------------------------------------
 	
-	dunGen.createDungeon(70,30,5)
-	-- local dog1 = dog.new("Yai-Ya", 4)
-	-- dog1:printAge()
+	-- dunGen.createDungeon(maxWidth, maxHeight, numRooms, numChests, numHiddenRooms, "algorithum")
+	dunGen.createDungeon(70,25,20,0,0,"digging")
 
-	-- local cat1 = cat.new("fluffy", 7)
 end
 
 
