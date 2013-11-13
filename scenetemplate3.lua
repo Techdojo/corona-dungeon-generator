@@ -36,8 +36,173 @@ function scene:createScene( event )
 	
 	-----------------------------------------------------------------------------
 	
-	-- dunGenDig.createDungeon(maxWidth, maxHeight, numRooms, numChests, numHiddenRooms, "algorithum")
-	dunGenDig.createDungeon(70,25,20,0,0,"digging")
+--[[
+TODO:
+change cell field from boolean to integer, indicating the number of visits;
+also, target the less visited cells in order to make maze more uniform;
+ 
+optimize!
+]]
+ 
+map = {}
+map.width = 79
+map.height = 25
+map.tile = {}
+map.cell = {}
+ 
+map.magic = 500
+map.loopChance = 0.1
+ 
+map.cellRadius = 2
+map.maxCellsX = math.floor( map.width / map.cellRadius )
+map.maxCellsY = math.floor( map.height / map.cellRadius )
+ 
+map.visitedCells = 0
+map.totalCells = 0
+ 
+direction = {
+{ 0, -1 },
+{ 0, 1 },
+{ -1, 0 },
+{ 1, 0 }
+}
+ 
+function initMap()
+for i = 1, map.width do
+map.tile[i] = {}
+end
+ 
+for i = 1, map.maxCellsX do
+map.cell[i] = {}
+end
+end
+ 
+function inRange( x, y )
+return	x > map.cellRadius and y > map.cellRadius and
+x <= map.width - map.cellRadius and y <= map.height - map.cellRadius
+end
+ 
+function cooridorLink( x1, y1, x2, y2, tile )
+local cx, cy = x1, y1
+ 
+while cx ~= x2 do
+if x1 > x2 then
+cx = cx - 1
+else
+cx = cx + 1
+end
+if inRange( cx, cy ) then
+map.tile[cx][cy] = tile
+end
+end
+ 
+while cy ~= y2 do
+if y1 > y2 then
+cy = cy - 1
+else
+cy = cy + 1
+end
+if inRange( cx, cy ) then
+map.tile[cx][cy] = tile
+end
+end
+end
+ 
+function countCells()
+map.totalCells = 0
+map.visitedCells = 0
+ 
+for i = 1, map.maxCellsX do
+for j = 1, map.maxCellsY do
+map.totalCells = map.totalCells + 1
+if map.cell[i][j] == true then
+map.visitedCells = map.visitedCells + 1
+end
+end
+end
+end
+ 
+function findFreeCell( tries )
+local rx, ry = 0, 0
+for i = 1, tries do
+rx = math.random( 1, map.maxCellsX )
+ry = math.random( 1, map.maxCellsY )
+if map.cell[rx][ry] == true then
+return rx, ry
+end
+end
+end
+ 
+function makeMaze()
+local rx, ry, rd = 0, 0, {}
+local c = 0
+ 
+for i = 1, map.width do
+for j = 1, map.height do
+map.tile[i][j] = "#"
+end
+end
+ 
+for i = 1, map.maxCellsX do
+for j = 1, map.maxCellsY do
+map.cell[i][j] = false
+end
+end
+ 
+rx = math.random( 1, map.maxCellsX )
+ry = math.random( 1, map.maxCellsY )
+ 
+map.cell[rx][ry] = true
+ 
+countCells()
+ 
+while map.visitedCells < map.totalCells do
+c = c + 1
+if c > map.magic then
+return false
+end
+ 
+rd = direction[ math.random( 1, 4 ) ]
+ 
+if	inRange( rx*map.cellRadius+rd[1], ry*map.cellRadius+rd[2] ) and
+(	map.cell[rx+rd[1]][ry+rd[2]] == false or
+math.random() < map.loopChance ) then
+cooridorLink( rx*map.cellRadius, ry*map.cellRadius,
+(rx+rd[1])*map.cellRadius, (ry+rd[2])*map.cellRadius, " " )
+rx = rx + rd[1]
+ry = ry + rd[2]
+else
+rx, ry = findFreeCell( map.magic )
+end
+ 
+map.cell[rx][ry] = true
+map.tile[rx*map.cellRadius][ry*map.cellRadius] = " "
+ 
+countCells()
+end
+ 
+return true
+end
+ 
+function showMap()
+for j = 1, map.height do
+for i = 1, map.width do
+io.write( map.tile[i][j] or "?" )
+end
+io.write( "\n" )
+end
+end
+ 
+function main()
+math.randomseed( os.time() )
+ 
+initMap()
+makeMaze()
+showMap()
+print( "visited " .. map.visitedCells .. " out of " .. map.totalCells .. " cells" )
+end
+ 
+main() 
 
 end
 

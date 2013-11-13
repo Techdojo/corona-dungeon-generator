@@ -393,29 +393,6 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		ytemp = yStart
 	end
 
-	roomLibLen = #roomLib
-
-	function saveRoomData(room)
-		roomLib[room] = {}
-		roomLib[room].xStart = xStart
-		roomLib[room].yStart = yStart
-		roomLib[room].width = xEnd - xStart
-		roomLib[room].height = yEnd - yStart
-	end
-
-	if roomLibLen == nil then
-		roomLibLen = 1
-		utils.dbprint("roomLibLen: " .. roomLibLen)
-		saveRoomData(roomLibLen)
-	else
-		roomLibLen = roomLibLen + 1
-		utils.dbprint("roomLibLen: " .. roomLibLen)
-		saveRoomData(roomLibLen)
-	end
-
-	utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
-
-
 	-- utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
 	-- Check if there is enough room for the room
 	-- utils.dbprint("Check space for room")
@@ -481,6 +458,32 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		ytemp = ytemp + 1
 		i = i + 1
 	end
+
+
+	-- Save all room data in the roomLib table
+	roomLibLen = #roomLib
+	-- saves room data to roomLib
+	function saveRoomData(room)
+		roomLib[room] = {}
+		roomLib[room].xStart = xStart
+		roomLib[room].yStart = yStart
+		roomLib[room].width = xEnd - xStart
+		roomLib[room].height = yEnd - yStart
+		roomLib[room].chests = 0
+	end
+	-- Detrmine position in roomLib then call saveRoomData
+	if roomLibLen == nil then
+		roomLibLen = 1
+		utils.dbprint("roomLibLen: " .. roomLibLen)
+		saveRoomData(roomLibLen)
+	else
+		roomLibLen = roomLibLen + 1
+		utils.dbprint("roomLibLen: " .. roomLibLen)
+		saveRoomData(roomLibLen)
+	end
+	-- debug print room data
+	utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
+
 	
 
 	-- yay, all done
