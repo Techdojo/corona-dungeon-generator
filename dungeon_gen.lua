@@ -16,37 +16,52 @@
 	
 ------------------------------------------------------------------------------]]
 
-local utils = require("utilities")					-- Load utilities
+-- #############################################################################
+-- Load modules
+-- #############################################################################
+local appGlobals = require("globalData")					-- Load Global data
+local utils = require("utilities")							-- Load utilities
 
+
+-- #############################################################################
+-- Setup variables
+-- #############################################################################
 local dunGen = {}
-local dunGen_mt = { __index = dunGen }				-- metatable
+local dunGen_mt = { __index = dunGen }						-- metatable
 	
 -- Maximum size of the map
-local xmax = 80										-- Maximum map width in columns (1 column = 32px)
-local ymax = 25										-- Maximum map height in rows of (1 row = 32px)
+local xmax = 70												-- Maximum map width in columns (1 column = 32px)
+local ymax = 25												-- Maximum map height in rows of (1 row = 32px)
 
 -- Size of the map
-local xsize = 80									-- Actual map width in columns (1 column = 32px), 0 by default
-local ysize = 25									-- Actual map height in rows of (1 row = 32px), 0 by default
+local xsize = 80											-- Actual map width in columns (1 column = 32px), 0 by default
+local ysize = 25											-- Actual map height in rows of (1 row = 32px), 0 by default
 
 -- Number of "objects" to generate
 local objects = 0
+local rooms = 0
+local hiddenRooms = 0
+local chests = 0
+local enemies = 0
 
 -- define the %chance to generate either a room or a corridor on the map
 -- BTW, rooms are 1st priority so actually it's enough to just define the chance
 -- of generating a room
-local chanceRoom = 75								-- % chance for adding a room
-local chanceCorridor = 25							-- % chance for adding a corridor
+local chanceRoom = 75										-- % chance for adding a room
+local chanceCorridor = 25									-- % chance for adding a corridor
 
 -- the dungeon map data
-local dungeon_map = {}								-- Table to hold the map data
+local dungeon_map = {}										-- Table to hold the map data
+
+local roomLib = {} 											-- Table to hold data on each room
+local roomLibLen = 0
 
 -- we will store the old random seed here
 local oldseed = 0
 
 --a list over tile types we're using
 local tileUnused = 0
-local tileDirtWall = 1								-- not in use
+local tileDirtWall = 1										-- not in use
 local tileDirtFloor = 2
 local tileStoneWall = 3
 local tileCorridor = 4
@@ -65,9 +80,9 @@ local msgDetailedHelp = ""
 
 local dunGenFinished = false
 
--------------------------------------------------
+-- #############################################################################
 -- PRIVATE FUNCTIONS
--------------------------------------------------
+-- #############################################################################
 
 -- setting a tile's type
 local function setCell(x, y, cellType)
@@ -102,14 +117,18 @@ local function getRand(min, max)
 	if (rand < 0) then
 		rand = -rand
 	end
-	-- print("rand: " .. rand)
+
+	-- utils.dbprint("rand: " .. rand)
 	return rand
 end
 
--- used to print the map on the console
+--- showDungeon: Displays grid in the console
+-- Used to print the map on the console
+-- 
 local function showDungeon() 
 	-- print("showDungeon called")
 
+	print(" ")
 	local decRow = "             1         2         3         4         5         6         7"
 	print(decRow)
 	local topRow = "top 1234567890123456789012345678901234567890123456789012345678901234567890"
@@ -132,13 +151,15 @@ local function showDungeon()
 			if cell == tileUnused then
 				mapRow = mapRow .. " "			-- empty cell, change to '%' to see the cell
 			elseif cell == tileDirtWall then
-				mapRow = mapRow .. "+"
+				mapRow = mapRow .. "#"
+			elseif cell == tileDirtCorner then
+				mapRow = mapRow .. "&"
 			elseif cell == tileDirtFloor then
 				mapRow = mapRow .. "."
 			elseif cell == tileStoneWall then
 				mapRow = mapRow .. "N"
 			elseif cell == tileCorridor then
-				mapRow = mapRow .. "#"
+				mapRow = mapRow .. "+"
 			elseif cell == tileDoor then
 				mapRow = mapRow .. "D"
 			elseif cell == tileUpStairs then
@@ -160,9 +181,16 @@ local function showDungeon()
 	end
 end
 
-
+--- makeCorridor
+-- 
+--
+-- @param x 
+-- @param y 
+-- @param length 
+-- @param direction The direction to build in
+--
 local function makeCorridor(x, y, lenght, direction)
-	utils.dbprint("Make corridor")
+	-- utils.dbprint("Make corridor")
 	-- define the dimensions of the corridor (er.. only the width and height..)
 	local len = getRand(2, lenght)
 	local floor = tileCorridor
@@ -185,7 +213,8 @@ local function makeCorridor(x, y, lenght, direction)
 		end
 
 		-- same thing here, to make sure it's not out of the boundaries
-		for ytemp = y, ytemp > (y-len) do
+		ytemp = y
+		while ytemp > (y-len) do
 			if ytemp < 0 or ytemp > ysize then
 				return false									-- oh boho, it was!
 			end
@@ -198,7 +227,8 @@ local function makeCorridor(x, y, lenght, direction)
 		end
 
 		-- if we're still here, let's start building
-		for ytemp = y, ytemp > (y-len) do
+		ytemp = y
+		while ytemp > (y-len) do
 			setCell(xtemp, ytemp, floor)
 			ytemp = ytemp - 1
 		end
@@ -211,7 +241,8 @@ local function makeCorridor(x, y, lenght, direction)
 			ytemp = y
 		end
 
-		for xtemp = x, xtemp < (x+len) do
+		xtemp = x
+		while xtemp < (x+len) do
 
 			if xtemp < 0 or xtemp > xsize then
 				return false
@@ -237,7 +268,8 @@ local function makeCorridor(x, y, lenght, direction)
 			xtemp = x
 		end
 
-		for ytemp = y, ytemp < (y+len) do
+		ytemp = y
+		while ytemp < (y+len) do
 			if ytemp < 0 or ytemp > ysize then
 				return false
 			end
@@ -249,7 +281,8 @@ local function makeCorridor(x, y, lenght, direction)
 			ytemp = ytemp + 1
 		end
 
-		for ytemp = y, ytemp < (y+len) do
+		ytemp = y
+		while ytemp < (y+len) do
 			setCell(xtemp, ytemp, floor)
 			ytemp = ytemp + 1
 		end
@@ -262,7 +295,8 @@ local function makeCorridor(x, y, lenght, direction)
 			ytemp = y
 		end
 
-		for xtemp = x, xtemp > (x-len) do
+		xtemp = x
+		while xtemp > (x-len) do
 			if xtemp < 0 or xtemp > xsize then
 				return false
 			end
@@ -274,7 +308,8 @@ local function makeCorridor(x, y, lenght, direction)
 			xtemp = xtemp - 1
 		end
 
-		for xtemp = x, xtemp > (x-len) do
+		xtemp = x
+		while xtemp > (x-len) do
 			setCell(xtemp, ytemp, floor)
 			xtemp = xtemp - 1
 		end
@@ -284,14 +319,26 @@ local function makeCorridor(x, y, lenght, direction)
 	return true
 end
 
+--- makeRoom
+-- Builds a room based on based on a set of parameters. It checks to see if
+-- there is enough space, if there is it then builds the room
+--
+-- @param x The starting x position
+-- @param y The starting y position
+-- @param xlength The width if the room
+-- @param ylength The heigth of the room
+-- @param direction The direction to build in
+--
 local function makeRoom(x, y, xlength, ylength, direction)
-	utils.dbprint("Start room building")
-	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 for walking on, the rest is walls)
-	local xlen = getRand(4, xlength)
-	local ylen = getRand(4, ylength)
+	-- utils.dbprint("Start room building")
+	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 
+	-- for walking on, the rest is walls)
 
-	utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
-	utils.dbprint("Room size: " .. xlen .. " X " .. ylen)
+	local xlen = getRand(6, xlength)
+	local ylen = getRand(6, ylength)
+
+	-- utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
+	-- utils.dbprint("Room size: " .. xlen .. " X " .. ylen)
 
 	local xStart
 	local yStart
@@ -303,6 +350,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	--the tile type it's going to be filled with
 	local floor = tileDirtFloor
 	local wall = tileDirtWall
+	local corner = tileDirtCorner
 
 	-- choose the way it's pointing at
 	local dir = 0
@@ -311,7 +359,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		dir = direction
 	end
 
-	if dir == 0 then		-- Build northwards
+	if dir == 0 then		-- Build north
 		-- print("North")
 		xStart = math.floor(x - (xlen / 2))
 		yStart = math.floor(y - ylen + 1)
@@ -345,24 +393,47 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		ytemp = yStart
 	end
 
-	utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+	roomLibLen = #roomLib
+
+	function saveRoomData(room)
+		roomLib[room] = {}
+		roomLib[room].xStart = xStart
+		roomLib[room].yStart = yStart
+		roomLib[room].width = xEnd - xStart
+		roomLib[room].height = yEnd - yStart
+	end
+
+	if roomLibLen == nil then
+		roomLibLen = 1
+		utils.dbprint("roomLibLen: " .. roomLibLen)
+		saveRoomData(roomLibLen)
+	else
+		roomLibLen = roomLibLen + 1
+		utils.dbprint("roomLibLen: " .. roomLibLen)
+		saveRoomData(roomLibLen)
+	end
+
+	utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
+
+
+	-- utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
 	-- Check if there is enough room for the room
-	utils.dbprint("Check space for room")
+	-- utils.dbprint("Check space for room")
 	for i = 1, ylen do
 		-- Check room starts at the top or max width
 		if ytemp <= 1 or ytemp > ysize then 
-			utils.dbprint("Err: Room y is outside the borders - return false") 
+			-- utils.dbprint("Err: Room y is outside the borders - return false") 
 			return false
 		end
 		for j = 1, xlen do
 			-- print("xtemp: " .. xtemp .. " | ytemp: " .. ytemp)
 			if xtemp <= 0 or xtemp > xsize then 
-				utils.dbprint("Err: Room x is outside the borders - return false") 
+				-- utils.dbprint("Err: Room x is outside the borders - return false") 
 				return false
 			end
 			if getCell(xtemp, ytemp) ~= tileUnused then 
-				utils.dbprint("Err: Room collides with another room - return false") 
-				utils.dbprint("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) 
+				-- utils.dbprint("Err: Room collides with another room - return false") 
+				-- utils.dbprint("xtemp: " .. xtemp .. " | ytemp: " .. ytemp) 
 				return false
 			end -- no space left...
 			xtemp = xtemp + 1
@@ -374,7 +445,8 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	end
 
 	-- we're still here, build
-	utils.dbprint("Start building room")
+	-- utils.dbprint("Start building room")
+
 	xtemp = xStart
 	ytemp = yStart
 
@@ -418,21 +490,17 @@ end
 
 
 
--------------------------------------------------
+-- #############################################################################
 -- PUBLIC FUNCTIONS
--------------------------------------------------
+-- #############################################################################
 
-function dunGen.createDungeon( intx, inty, intobj )
+-- dunGen.createDungeon(maxWidth, maxHeight, numRooms, numChests, numHiddenRooms, "algorithum")
+function dunGen.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms, algorithum )
 
+	-- utils.dbprint("dunGen.createDungeon called")
 
-	utils.dbprint("dunGen.createDungeon called")
-
-	if intobj < 1 then 
-		objects = 10
-	else
-		objects = intobj
-	end
-
+	-- Check initial values for createDungeon parameters
+	-- 
 	if intx == nil then
 		xsize = 3
 	elseif intx < 3 then 
@@ -453,9 +521,40 @@ function dunGen.createDungeon( intx, inty, intobj )
 		ysize = inty 
 	end
 
+	if numRooms == nil then
+		rooms = 10
+	elseif numRooms < 1 then 
+		rooms = 10
+	else
+		rooms = numRooms
+	end
+
+	if numChests == nil then
+		chests = 10
+	elseif numChests < 1 then 
+		chests = 10
+	else
+		chests = numChests
+	end
+
+	if numHiddenRooms == nil then
+		hiddenRooms = getRand(0,1)
+	-- elseif numHiddenRooms < 1 then 
+	-- 	hiddenRooms = getRand(0,1)
+	else
+		hiddenRooms = getRand(0,1)
+	end
+
+	enemies = getRand(1,10)
+
 	utils.dbprint(msgXSize .. xsize)
 	utils.dbprint(msgYSize .. ysize)
-	utils.dbprint(msgMaxObjects .. objects)
+	utils.dbprint(msgMaxObjects .. rooms)
+	utils.dbprint("Number of rooms: " .. rooms)
+	utils.dbprint("Number of hidden rooms: " .. hiddenRooms)
+	utils.dbprint("Number of chests: " .. chests)
+	utils.dbprint("Number of enemies: " .. enemies)
+
 
 	-- redefine the map var, so it's adjusted to our new map size
 	-- for y=1, ysize do
@@ -476,7 +575,6 @@ function dunGen.createDungeon( intx, inty, intobj )
 			elseif y == ysize then setCell(x, y, tileStoneWall)
 			elseif x == 1 then setCell(x, y, tileStoneWall)
 			elseif x == xsize then setCell(x, y, tileStoneWall)
-
 			-- and fill the rest with dirt
 			else setCell(x, y, tileUnused) end
 
@@ -491,19 +589,22 @@ function dunGen.createDungeon( intx, inty, intobj )
 	-- *******************************************************************************/
 
 	-- start with making a room in the middle, which we can start building upon
-	makeRoom(xsize/2, ysize/2, 7, 7, getRand(0,3));
+	-- makeRoom(startx, starty, width, height, direction)
+	makeRoom(xsize/2, ysize/2, 7, 7, getRand(0,3))
 
 	-- keep count of the number of "objects" we've made
-	currentFeatures = 1; -- +1 for the first room we just made
+	local currentRooms = 1; -- +1 for the first room we just made
 
 
 	-- then we sart the main loop
 	local countingTries = 0
 	local testing = 0
-	for countingTries = 0, 10 do 	-- 0, 1000
+
+	for countingTries = 0, 1000 do 	-- 0, 1000
 		-- print("countingTries: " .. countingTries)
-		-- check if we've reached our quota
-		if currentFeatures == objects then
+
+		-- check if we've reached our room quota
+		if currentRooms == rooms then
 			break
 		end
 
@@ -518,32 +619,38 @@ function dunGen.createDungeon( intx, inty, intobj )
 
 		-- 1000 chances to find a suitable object (room or corridor)..
 		-- (yea, i know it's kinda ugly with a for-loop... -_-')
-		for testing = 0, 10 do 	-- 0, 1000
+		for testing = 0, 1000 do 	-- 0, 1000
 			-- print("testing: " .. testing)
 
-			newx = getRand(1, xsize-1)
-			newy = getRand(1, ysize-1)
-			validTile = -1
+			-- Pick a random spot on the map
+			newx = getRand(2, xsize-1)
+			newy = getRand(2, ysize-1)
+			-- print("tempx: " .. newx .. " tempy: " .. newy)
+			validTile = -1 									-- Set validTile to -1 (invalid)
 
-			-- print("tempx: " + newx + "\ntempy: " + newy)
+			-- If the randomly picked tile is wall or corridor
 			if getCell(newx, newy) == tileDirtWall or getCell(newx, newy) == tileCorridor then
 				-- check if we can reach the place
 				if getCell(newx, newy+1) == tileDirtFloor or getCell(newx, newy+1) == tileCorridor then
 					validTile = 0
 					xmod = 0
 					ymod = -1
+					-- utils.dbprint("validTile is: " .. validTile)
 				elseif getCell(newx-1, newy) == tileDirtFloor or getCell(newx-1, newy) == tileCorridor then
 					validTile = 1
 					xmod = 1
 					ymod = 0
+					-- utils.dbprint("validTile is: " .. validTile)
 				elseif getCell(newx, newy-1) == tileDirtFloor or getCell(newx, newy-1) == tileCorridor then
 					validTile = 2
 					xmod = 0
 					ymod = 1
+					-- utils.dbprint("validTile is: " .. validTile)
 				elseif getCell(newx+1, newy) == tileDirtFloor or getCell(newx+1, newy) == tileCorridor then
 					validTile = 3
 					xmod = -1
 					ymod = 0
+					-- utils.dbprint("validTile is: " .. validTile)
 				end
 
 				-- check that we haven't got another door nearby, so we won't get alot of openings besides
@@ -572,12 +679,12 @@ function dunGen.createDungeon( intx, inty, intobj )
 		if validTile > -1 then
 			-- choose what to build now at our newly found place, and at what direction
 			local feature = getRand(0, 100)
-			-- print("Feature is: " .. feature)
+			-- utils.dbprint("Feature is: " .. feature)
 
 			if feature <= chanceRoom then -- a new room
-				utils.dbprint("Make room")
+				-- utils.dbprint("Make room")
 				if makeRoom((newx+xmod), (newy+ymod), 8, 6, validTile) then
-					currentFeatures = currentFeatures + 1 --add to our quota
+					currentRooms = currentRooms + 1 --add to our quota
 
 					-- then we mark the wall opening with a door
 					setCell(newx, newy, tileDoor)
@@ -585,14 +692,16 @@ function dunGen.createDungeon( intx, inty, intobj )
 					-- clean up infront of the door so we can reach it
 					setCell((newx+xmod), (newy+ymod), tileDirtFloor)
 				end
-			elseif feature >= chanceRoom then -- new corridor
-				utils.dbprint("Make corridor")
+			--[[
+			elseif feature > chanceRoom then -- new corridor
+				-- utils.dbprint("Make corridor")
 				if makeCorridor((newx+xmod), (newy+ymod), 6, validTile) then
 					-- same thing here, add to the quota and a door
 					currentFeatures = currentFeatures + 1
 
 					setCell(newx, newy, tileDoor)
 				end
+			]]
 			end
 		end
 
