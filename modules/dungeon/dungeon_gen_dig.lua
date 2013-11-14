@@ -73,8 +73,8 @@ local tileChest = 8
 
 local dunGenFinished = false
 
-local roomMin = 6
-local romMax = 14
+local roomMin = 4
+local romMax = 20
 
 -- misc. messages to print
 local msgXSize = "X size of dungeon: "
@@ -336,7 +336,7 @@ end
 -- @param direction The direction to build in
 --
 local function makeRoom(x, y, xlength, ylength, direction)
-	-- utils.dbprint("Start room building")
+	utils.dbprint("\nStart room building")
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 
 	-- for walking on, the rest is walls)
 
@@ -345,15 +345,16 @@ local function makeRoom(x, y, xlength, ylength, direction)
 
 	-- utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
 	-- utils.dbprint("Room size: " .. xlen .. " X " .. ylen)
-
-	local xStart 	-- the starting x position to check
-	local yStart 	-- the starting y position to check
-	local xEnd 		-- the ending x position to check
-	local yEnd 		-- the ending y position to check
-	local xtemp 	-- the current x position to check
-	local ytemp 	-- the current y position to check
-	local countX 	-- the amount for width cells to loop through
-	local countY 	-- the amount for height cells to loop through
+	local roomWidth = xlen				-- the width of the room
+	local roomHeight = ylen				-- the height of the room
+	local xStart 						-- the starting x position to check
+	local yStart 						-- the starting y position to check
+	local xEnd 							-- the ending x position to check
+	local yEnd 							-- the ending y position to check
+	local xtemp 						-- the current x position to check
+	local ytemp 						-- the current y position to check
+	local countX 						-- the amount for width cells to loop through
+	local countY 						-- the amount for height cells to loop through
 
 	--the tile type it's going to be filled with
 	local floor = tileDirtFloor
@@ -367,37 +368,40 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		dir = direction
 	end
 
-	dir = 0
+
 
 	if dir == 0 then		-- Build north
+
 		xStart = math.floor(x - (xlen / 2))
 		yStart = math.floor(y)
-		xEnd = math.floor(xStart + xlen)
-		yEnd = math.floor(y - ylen)
+		xEnd = math.floor(xStart + xlen - 1)
+		yEnd = math.floor(y - ylen + 1)
 		xtemp = xStart
 		ytemp = yStart
+		utils.dbprint("Room width is: "..roomWidth)
+		utils.dbprint("Room height is: "..roomHeight)
 		utils.dbprint("xStart is: "..xStart)
 		utils.dbprint("yStart is: "..yStart)
 		utils.dbprint("xEnd is: "..xEnd)
 		utils.dbprint("yEnd is: "..yEnd)
-
-		utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		utils.dbprint("Create "..roomWidth.."x"..roomHeight.." room north cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		
 		-- Check if there is enough space for the room to the north
-		-- utils.dbprint("Check space for a room to the north")
-		for i = 0, ylen do
-			utils.dbprint("ytemp: "..ytemp)
+		-- utils.dbprint("Start north space check loops")
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: "..ytemp)
 			if ytemp < 1 or ytemp > ysize then
-				utils.dbprint("Room hits left or right walls")
+				-- utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
-			for j = 0, xlen do
-				utils.dbprint("xtemp: "..xtemp)
+			for j = 1, xlen do
+				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= xsize then 
-					utils.dbprint("Room hits top or bottom walls")
+					-- utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
 				if getCell(xtemp, ytemp) ~= tileUnused then 
-					utils.dbprint("Room hits a filled cell")
+					-- utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
@@ -407,10 +411,16 @@ local function makeRoom(x, y, xlength, ylength, direction)
 			ytemp = ytemp - 1
 			i = i + 1
 		end
- 
+		-- utils.dbprint("End north space check loops")
+ 		
 		-- we're still here, build
-		for ytemp = yStart, yEnd do
-			for xtemp = xStart, xEnd do
+		-- utils.dbprint("Start build loops")
+		xtemp = xStart
+		ytemp = yStart
+
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: ".. ytemp.." yEnd:"..yEnd)
+			for j = 1, xlen do
 				-- start with the walls
 				if xtemp == xStart then setCell(xtemp, ytemp, wall)
 				elseif xtemp == xEnd then setCell(xtemp, ytemp, wall) 
@@ -419,33 +429,147 @@ local function makeRoom(x, y, xlength, ylength, direction)
 				-- and then fill with the floor
 				else setCell(xtemp, ytemp, floor) end
 				xtemp = xtemp + 1
+				j = j + 1
 			end
+			xtemp = xStart
 			ytemp = ytemp - 1
+			i = i + 1
 		end
+		-- utils.dbprint("End build loops")
 		
 	elseif dir == 1 then -- Build east
+		
 		xStart = math.floor(x)
 		yStart = math.floor(y - (ylen/2))
 		xEnd = math.floor(xStart + xlen - 1)
 		yEnd = math.floor(yStart + ylen - 1)
 		xtemp = xStart
 		ytemp = yStart
-
-		-- utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		utils.dbprint("Room width is: "..roomWidth)
+		utils.dbprint("Room height is: "..roomHeight)
+		utils.dbprint("xStart is: "..xStart)
+		utils.dbprint("yStart is: "..yStart)
+		utils.dbprint("xEnd is: "..xEnd)
+		utils.dbprint("yEnd is: "..yEnd)
+		utils.dbprint("Create "..roomWidth.."x"..roomHeight.." room east cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		
 		-- Check if there is enough space for the room to the east
-		-- utils.dbprint("Check space for a room to the east")
+		-- utils.dbprint("Start east space check loops")
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: "..ytemp)
+			if ytemp < 1 or ytemp > ysize then
+				-- utils.dbprint("Room hits left or right walls")
+				return false 								-- if ytemp is the start or end wall, stop. 
+			end
+			for j = 1, xlen do
+				-- utils.dbprint("xtemp: "..xtemp)
+				if xtemp <= 1 or xtemp >= xsize then 
+					-- utils.dbprint("Room hits top or bottom walls")
+					return false 							-- if xtemp is the start or end wall, stop.
+				end 
+				if getCell(xtemp, ytemp) ~= tileUnused then 
+					-- utils.dbprint("Room hits a filled cell")
+					return false 							-- if cell is not emptey, stop.
+				end 
+				xtemp = xtemp + 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp + 1
+			i = i + 1
+		end
+		-- utils.dbprint("End space check loops")
+ 		
+		-- we're still here, build
+		-- utils.dbprint("Start build loops")
+		xtemp = xStart
+		ytemp = yStart
+
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: ".. ytemp.." yEnd:"..yEnd)
+			for j = 1, xlen do
+				-- start with the walls
+				if xtemp == xStart then setCell(xtemp, ytemp, wall)
+				elseif xtemp == xEnd then setCell(xtemp, ytemp, wall) 
+				elseif ytemp == yStart then setCell(xtemp, ytemp, wall)
+				elseif ytemp == yEnd then setCell(xtemp, ytemp, wall)
+				-- and then fill with the floor
+				else setCell(xtemp, ytemp, floor) end
+				xtemp = xtemp + 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp + 1
+			i = i + 1
+		end
+		-- utils.dbprint("End build loops")
 		
 	elseif dir == 2 then -- Build south
+
 		xStart = math.floor(x - (xlen / 2))
 		yStart = math.floor(y)
 		xEnd = math.floor((xStart + xlen) - 1)
 		yEnd = math.floor(y + ylen - 1)
 		xtemp = xStart
 		ytemp = yStart
-
-		-- utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		utils.dbprint("Room width is: "..roomWidth)
+		utils.dbprint("Room height is: "..roomHeight)
+		utils.dbprint("xStart is: "..xStart)
+		utils.dbprint("yStart is: "..yStart)
+		utils.dbprint("xEnd is: "..xEnd)
+		utils.dbprint("yEnd is: "..yEnd)
+		utils.dbprint("Create "..roomWidth.."x"..roomHeight.." room south cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
+		
 		-- Check if there is enough space for the room to the south
-		-- utils.dbprint("Check space for a room to the south")
+		-- utils.dbprint("Start south space check loops")
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: "..ytemp)
+			if ytemp < 1 or ytemp > ysize then
+				-- utils.dbprint("Room hits left or right walls")
+				return false 								-- if ytemp is the start or end wall, stop. 
+			end
+			for j = 1, xlen do
+				-- utils.dbprint("xtemp: "..xtemp)
+				if xtemp <= 1 or xtemp >= xsize then 
+					-- utils.dbprint("Room hits top or bottom walls")
+					return false 							-- if xtemp is the start or end wall, stop.
+				end 
+				if getCell(xtemp, ytemp) ~= tileUnused then 
+					-- utils.dbprint("Room hits a filled cell")
+					return false 							-- if cell is not emptey, stop.
+				end 
+				xtemp = xtemp + 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp - 1
+			i = i + 1
+		end
+		-- utils.dbprint("End space check loops")
+ 		
+		-- we're still here, build
+		-- utils.dbprint("Start build loops")
+		xtemp = xStart
+		ytemp = yStart
+
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: ".. ytemp.." yEnd:"..yEnd)
+			for j = 1, xlen do
+				-- start with the walls
+				if xtemp == xStart then setCell(xtemp, ytemp, wall)
+				elseif xtemp == xEnd then setCell(xtemp, ytemp, wall) 
+				elseif ytemp == yStart then setCell(xtemp, ytemp, wall)
+				elseif ytemp == yEnd then setCell(xtemp, ytemp, wall)
+				-- and then fill with the floor
+				else setCell(xtemp, ytemp, floor) end
+				xtemp = xtemp + 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp + 1
+			i = i + 1
+		end
+		-- utils.dbprint("End build south loops")
 		
 	elseif dir == 3 then 	-- Build west
 		xStart = math.floor(x - xlen + 1)
@@ -458,21 +582,85 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		-- utils.dbprint("Room cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
 		-- Check if there is enough space for the room to the west
 		-- utils.dbprint("Check space for a room to the west")
+
+		xStart = math.floor(x)
+		yStart = math.floor(y - (ylen / 2))
+		xEnd = math.floor(x - xlen + 1)
+		yEnd = math.floor(yStart + ylen - 1)
+		xtemp = xStart
+		ytemp = yStart
+		utils.dbprint("Room width is: "..roomWidth)
+		utils.dbprint("Room height is: "..roomHeight)
+		utils.dbprint("xStart is: "..xStart)
+		utils.dbprint("yStart is: "..yStart)
+		utils.dbprint("xEnd is: "..xEnd)
+		utils.dbprint("yEnd is: "..yEnd)
+		utils.dbprint("Create "..roomWidth.."x"..roomHeight.." room west cord pos: x" .. xStart  .. ", y" .. yStart .. " / x" .. xEnd .. ", y" .. yEnd )
 		
+		-- Check if there is enough space for the room to the east
+		-- utils.dbprint("Start east space check loops")
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: "..ytemp)
+			if ytemp < 1 or ytemp > ysize then
+				-- utils.dbprint("Room hits left or right walls")
+				return false 								-- if ytemp is the start or end wall, stop. 
+			end
+			for j = 1, xlen do
+				-- utils.dbprint("xtemp: "..xtemp)
+				if xtemp <= 1 or xtemp >= xsize then 
+					-- utils.dbprint("Room hits top or bottom walls")
+					return false 							-- if xtemp is the start or end wall, stop.
+				end 
+				if getCell(xtemp, ytemp) ~= tileUnused then 
+					-- utils.dbprint("Room hits a filled cell")
+					return false 							-- if cell is not emptey, stop.
+				end 
+				xtemp = xtemp - 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp + 1
+			i = i + 1
+		end
+		-- utils.dbprint("End space check loops")
+ 		
+		-- we're still here, build
+		-- utils.dbprint("Start build loops")
+		xtemp = xStart
+		ytemp = yStart
+
+		for i = 1, ylen do
+			-- utils.dbprint("ytemp: ".. ytemp.." yEnd:"..yEnd)
+			for j = 1, xlen do
+				-- start with the walls
+				if xtemp == xStart then setCell(xtemp, ytemp, wall)
+				elseif xtemp == xEnd then setCell(xtemp, ytemp, wall) 
+				elseif ytemp == yStart then setCell(xtemp, ytemp, wall)
+				elseif ytemp == yEnd then setCell(xtemp, ytemp, wall)
+				-- and then fill with the floor
+				else setCell(xtemp, ytemp, floor) end
+				xtemp = xtemp - 1
+				j = j + 1
+			end
+			xtemp = xStart
+			ytemp = ytemp + 1
+			i = i + 1
+		end
+		-- utils.dbprint("End build south loops")
 	end
+	-- utils.dbprint("End all build loops")
 
-	
-
-
-	-- Save all room data in the roomLib table
+	-- Find how many rooms are in roomLib table
 	roomLibLen = #roomLib
-	-- saves room data to roomLib
+	-- saves room data to roomLib table
 	function saveRoomData(room)
 		roomLib[room] = {}
 		roomLib[room].xStart = xStart
 		roomLib[room].yStart = yStart
-		roomLib[room].width = xEnd - xStart
-		roomLib[room].height = yEnd - yStart
+		roomLib[room].xEnd = xEnd
+		roomLib[room].yEnd = yEnd
+		roomLib[room].width = roomWidth
+		roomLib[room].height = roomHeight
 		roomLib[room].chests = 0
 	end
 	-- Detrmine position in roomLib then call saveRoomData
@@ -487,8 +675,6 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	end
 	-- debug print room data
 	utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
-
-	
 
 	-- yay, all done
 	return true
@@ -593,11 +779,11 @@ function dunGenDig.createDungeon( intx, inty, numRooms, numChests, numHiddenRoom
 
 	--*******************************************************************************
 	-- And now the code of the random-map-generation-algorithm begins!
-	-- *******************************************************************************/
+	--*******************************************************************************/
 
 	-- start with making a room in the middle, which we can start building upon
 	-- makeRoom(startx, starty, width, height, direction)
-	makeRoom(xsize/2, ysize/2, 7, 7, getRand(0,3))
+	makeRoom(xsize/2, ysize/2, 12, 12, getRand(0,3))
 
 	-- keep count of the number of "objects" we've made
 	local currentRooms = 1; -- +1 for the first room we just made
@@ -607,6 +793,7 @@ function dunGenDig.createDungeon( intx, inty, numRooms, numChests, numHiddenRoom
 	local countingTries = 0
 	local testing = 0
 
+	--[[
 	for countingTries = 0, 1000 do 	-- 0, 1000
 		-- print("countingTries: " .. countingTries)
 
@@ -692,7 +879,7 @@ function dunGenDig.createDungeon( intx, inty, numRooms, numChests, numHiddenRoom
 			if feature <= chanceRoom then -- a new room
 				-- utils.dbprint("Make room")
 				-- makeRoom(x, y, xlength, ylength, direction)
-				if makeRoom((newx+xmod), (newy+ymod), math.random(roomMin,roomMax), math.random(roomMin,roomMax), validTile) then
+				if makeRoom((newx+xmod), (newy+ymod), roomMax, roomMax, validTile) then
 					currentRooms = currentRooms + 1 -- add to our quota
 
 					-- then we mark the wall opening with a door
@@ -701,7 +888,6 @@ function dunGenDig.createDungeon( intx, inty, numRooms, numChests, numHiddenRoom
 					-- clean up infront of the door so we can reach it
 					setCell((newx+xmod), (newy+ymod), tileDirtFloor)
 				end
-			--[[
 			elseif feature > chanceRoom then -- new corridor
 				-- utils.dbprint("Make corridor")
 				if makeCorridor((newx+xmod), (newy+ymod), 6, validTile) then
@@ -710,13 +896,12 @@ function dunGenDig.createDungeon( intx, inty, numRooms, numChests, numHiddenRoom
 
 					setCell(newx, newy, tileDoor)
 				end
-			]]
 			end
 		end
 
 		countingTries = countingTries + 1
 	end
-
+	]]
 
 
 
