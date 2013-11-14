@@ -31,9 +31,9 @@ display.setStatusBar( display.HiddenStatusBar ) -- Hide status bar from the begi
 
 -- Import modules
 local GD = require("globalData")					-- Load Global data
-local utils = require("utilities")					-- Load utilities
 local json = require ("json")						-- Load JSON
 local storyboard = require ("storyboard")			-- Load Storyboard
+local utils = require("modules.tools.utilities")	-- Load utilities
 
 -- Set scenes to purge automatically.
 storyboard.purgeOnSceneChange = true

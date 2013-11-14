@@ -5,9 +5,9 @@
 ----------------------------------------------------------------------------------
 
 local appGlobals = require("globalData")			-- Load Global data
-local utils = require("utilities")					-- Load utilities
+local utils = require("modules.tools.utilities")					-- Load utilities
 local storyboard = require( "storyboard" )			-- Load storyboard
-local dunGenDig = require("dungeon_gen_dig")
+local dunGenDig = require("modules.dungeon.dungeon_gen_dig")
 -- local dog = require("dog")
 -- local cat = require("cat")
 local scene = storyboard.newScene()
