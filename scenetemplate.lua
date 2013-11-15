@@ -7,7 +7,7 @@
 local appGlobals = require("globalData")			-- Load Global data
 local utils = require("modules.tools.utilities")					-- Load utilities
 local storyboard = require( "storyboard" )			-- Load storyboard
-local dunGenDig = require("modules.dungeon.dungeon_gen_dig")
+local dunGenDig = require("modules.dungeon.dungeon_dig")
 -- local dog = require("dog")
 -- local cat = require("cat")
 local scene = storyboard.newScene()
@@ -37,7 +37,7 @@ function scene:createScene( event )
 	-----------------------------------------------------------------------------
 	
 	-- dunGenDig.createDungeon(maxWidth, maxHeight, numRooms, numChests, numHiddenRooms, "algorithum")
-	dunGenDig.createDungeon(70,25,20,0,0,"digging")
+	dunGenDig.createDungeon(70,25,4,0,0,"digging")
 
 end
 
