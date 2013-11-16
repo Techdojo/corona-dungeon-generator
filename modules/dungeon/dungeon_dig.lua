@@ -201,7 +201,7 @@ end
 -- @param x The starting x position
 -- @param y The starting y position
 -- @param xlength The width if the room
--- @param ylength The heigth of the room
+-- @param ylength The height of the room
 -- @param direction The direction to build in
 --
 local function makeRoom(x, y, xlength, ylength, direction)
@@ -209,53 +209,26 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 
 	-- for walking on, the rest is walls)
 
-	-- saves room data to roomLib table
-	function createRoomData(room)
-		dungeon.rooms[room] = {} 							-- 
-		dungeon.rooms[room].xStart = xStart 				-- 
-		dungeon.rooms[room].yStart = yStart 				-- 
-		dungeon.rooms[room].xEnd = xEnd 					-- 
-		dungeon.rooms[room].yEnd = yEnd 					-- 
-		dungeon.rooms[room].width = roomWidth 				-- 
-		dungeon.rooms[room].height = roomHeight 			-- 
-		-- wall cell Coordinates
-		dungeon.rooms[room].wallCoords = {
-			{},												-- north
-			{},												-- east
-			{},												-- south
-			{}												-- west
-		}
-		dungeon.rooms[room].doors = {0,0,0,0} 				-- doors(north,east,south,west)
-		dungeon.rooms[room].chests = 0 						-- number of chests in the room
-	end
-	-- debug print room data
-	-- utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
-
-	local roomNum = #dungeon.rooms
-	-- Detrmine position in roomLib then call saveRoomData
-	if roomNum == nil then
-		roomNum = 1
-		createRoomData(roomNum)
-	else
-		roomNum = roomNum+1
-		createRoomData(roomNum)
-	end
-	utils.dbprint("no. of rooms: " .. roomNum)
-	
-	local room = dungeon.rooms[roomNum]
-
-	room.width = getRand(roomMin, xlength)					-- the width of the room
-	room.height = getRand(roomMin, ylength)					-- the height of the room
-	-- utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
-	-- utils.dbprint("Room size: " .. room.width .. "X" .. room.height)
-
+	local roomNum 											-- 
+	local room 												-- room will hold the room data table
+	local width = getRand(roomMin, xlength)					-- the width of the room
+	local height = getRand(roomMin, ylength)				-- the height of the room
+	local xStart 											-- First x coordinate
+	local yStart 											-- First y coordinate
+	local xEnd 												-- Last x coordinate
+	local yEnd 												-- Last y coordinate
 	local xtemp 											-- the current x position to check
 	local ytemp 											-- the current y position to check
+	-- utils.dbprint("Map center: " .. math.floor(x) .. " X " .. math.floor(y))
+	-- utils.dbprint("Room size: " .. room.width .. "X" .. room.height)
 
 	--the tile type it's going to be filled with
 	local floor = tileDirtFloor
 	local wall = tileDirtWall
 	local corner = tileDirtCorner
+	local door = tileDoor
+	local chest = tileChest
+	local corridor = tileCorridor
 
 	-- choose the way it's pointing at
 	local dir = 0 											-- 1,2,3,4 (north,east,south,west)
@@ -264,45 +237,104 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		dir = direction
 	end
 
-	-- dir = 2
+	dir = 1
+
+	-- save room data to roomLib table
+	function createRoomData(xStart, yStart, xEnd, yEnd, width, height)
+		utils.dbprint("Called createRoomData")
+
+		roomNum = #dungeon.rooms
+		-- Detrmine position in roomLib then call saveRoomData
+		if roomNum == nil then
+			roomNum = 1
+		else
+			roomNum = roomNum+1
+		end
+		utils.dbprint("room number: " .. roomNum)
+
+		dungeon.rooms[roomNum] = {} 						-- 
+		dungeon.rooms[roomNum].xStart = xStart 				-- 
+		dungeon.rooms[roomNum].yStart = yStart 				-- 
+		dungeon.rooms[roomNum].xEnd = xEnd 					-- 
+		dungeon.rooms[roomNum].yEnd = yEnd 					-- 
+		dungeon.rooms[roomNum].width = width 				-- 
+		dungeon.rooms[roomNum].height = height 				-- 
+		-- wall cell Coordinates
+		dungeon.rooms[roomNum].wallCoords = {
+			{},												-- north
+			{},												-- east
+			{},												-- south
+			{}												-- west
+		}
+		dungeon.rooms[roomNum].doors = {0,0,0,0} 			-- doors(north,east,south,west)
+		dungeon.rooms[roomNum].chests = 0 					-- number of chests in the room
+		utils.dbprint("Finished creating room table\n")
+
+		-- Return the current room number
+		return roomNum
+	end
+
+	-- Save a room's wall cell location into wall direction tables
+	function saveWallCoordinate(roomNum,wallDir,x,y)
+		local wallCoords = dungeon.rooms[roomNum].wallCoords[wallDir]
+		local wallCoords = 
+
+
+		local xpos = x
+		local ypos = y
+		table.insert(wallCoords, coords)
+		print("Print condents of coordinate table:")
+		
+	end
+	-- debug print room data
+	-- utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
+
 
 	if dir == 1 then		-- Build north
 
-		room.xStart = math.floor(x - (room.width / 2))
-		room.yStart = math.floor(y)
-		room.xEnd = math.floor(room.xStart + room.width - 1)
-		room.yEnd = math.floor(y - room.height + 1)
-		xtemp = room.xStart
-		ytemp = room.yStart
+		xStart = math.floor(x - (width / 2))
+		yStart = math.floor(y)
+		xEnd = math.floor(xStart + width - 1)
+		yEnd = math.floor(y - height + 1)
+		xtemp = xStart
+		ytemp = yStart
 
 		-- Check if there is enough space for the room to the north
 		-- utils.dbprint("Start north space check loops")
-		for i = 1, room.height do
+		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
 			if ytemp < 1 or ytemp > dungeon.height then
 				-- utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
-			for j = 1, room.width do
+			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
 					-- utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
-				end 
-				if getCell(xtemp, ytemp) ~= tileUnused then 
+				end
+				-- Check to see if the room will collide with an inner part of a room or
+				-- corridor, if it does return false.
+				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
 					-- utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
 				j = j + 1
 			end
-			xtemp = room.xStart
+			xtemp = xStart
 			ytemp = ytemp - 1
 			i = i + 1
 		end
 		-- utils.dbprint("End north space check loops")
+
  		
-		-- we're still here, build
+		-- Were still here so enter into roomdata table and save data
+		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
+		print("returned room is: ".. roomNum)
+		room = dungeon.rooms[roomNum]
+
+		-- ...and build the room
 		-- utils.dbprint("Start build loops")
 		xtemp = room.xStart
 		ytemp = room.yStart
@@ -320,6 +352,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 4, xtemp, ytemp)			-- Save west wall coordinates
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
@@ -330,11 +363,14 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 2, xtemp, ytemp)			-- Save east wall coordinates
 					end 
 				elseif ytemp == room.yStart then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 3, xtemp, ytemp)				-- Save south wall coordinates
 				elseif ytemp == room.yEnd then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 2, xtemp, ytemp)				-- Save north wall coordinates
 				else -- and then fill with the floor
 					setCell(xtemp, ytemp, floor) 
 				end
@@ -349,41 +385,46 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		
 	elseif dir == 2 then -- Build east
 		
-		room.xStart = math.floor(x)
-		room.yStart = math.floor(y - (room.height/2))
-		room.xEnd = math.floor(room.xStart + room.width - 1)
-		room.yEnd = math.floor(room.yStart + room.height - 1)
-		xtemp = room.xStart
-		ytemp = room.yStart
+		xStart = math.floor(x)
+		yStart = math.floor(y - (height/2))
+		xEnd = math.floor(xStart + width - 1)
+		yEnd = math.floor(yStart + height - 1)
+		xtemp = xStart
+		ytemp = yStart
 		
 		-- Check if there is enough space for the room to the east
 		-- utils.dbprint("Start east space check loops")
-		for i = 1, room.height do
+		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
 			if ytemp < 1 or ytemp > dungeon.height then
 				-- utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
-			for j = 1, room.width do
+			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
 					-- utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
-				if getCell(xtemp, ytemp) ~= tileUnused then 
+				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
 					-- utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
 				j = j + 1
 			end
-			xtemp = room.xStart
+			xtemp = xStart
 			ytemp = ytemp + 1
 			i = i + 1
 		end
 		-- utils.dbprint("End space check loops")
  		
-		-- we're still here, build
+		-- Were still here so enter into roomdata table and save data
+		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
+		print("returned room is: ".. roomNum)
+		room = dungeon.rooms[roomNum]
+
+		-- ...and build the room
 		-- utils.dbprint("Start build loops")
 		xtemp = room.xStart
 		ytemp = room.yStart
@@ -430,41 +471,46 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		
 	elseif dir == 3 then -- Build south
 
-		room.xStart = math.floor(x - (room.width / 2))
-		room.yStart = math.floor(y)
-		room.xEnd = math.floor((room.xStart + room.width) - 1)
-		room.yEnd = math.floor(y + room.height - 1)
-		xtemp = room.xStart
-		ytemp = room.yStart
+		xStart = math.floor(x - (width / 2))
+		yStart = math.floor(y)
+		xEnd = math.floor((xStart + width) - 1)
+		yEnd = math.floor(y + height - 1)
+		xtemp = xStart
+		ytemp = yStart
 		
 		-- Check if there is enough space for the room to the south
 		-- utils.dbprint("Start south space check loops")
-		for i = 1, room.height do
+		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
 			if ytemp < 1 or ytemp > dungeon.height then
 				-- utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
-			for j = 1, room.width do
+			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
 					-- utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
-				if getCell(xtemp, ytemp) ~= tileUnused then 
+				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
 					-- utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
 				j = j + 1
 			end
-			xtemp = room.xStart
+			xtemp = xStart
 			ytemp = ytemp - 1
 			i = i + 1
 		end
 		-- utils.dbprint("End space check loops")
  		
-		-- we're still here, build
+		-- Were still here so enter into roomdata table and save data
+		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
+		print("returned room is: ".. roomNum)
+		room = dungeon.rooms[roomNum]
+
+		-- ...and build the room
 		-- utils.dbprint("Start build loops")
 		xtemp = room.xStart
 		ytemp = room.yStart
@@ -511,41 +557,46 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		
 	elseif dir == 4 then 	-- Build west
 
-		room.xStart = math.floor(x)
-		room.yStart = math.floor(y - (room.height / 2))
-		room.xEnd = math.floor(x - room.width + 1)
-		room.yEnd = math.floor(room.yStart + room.height - 1)
-		xtemp = room.xStart
-		ytemp = room.yStart
+		xStart = math.floor(x)
+		yStart = math.floor(y - (height / 2))
+		xEnd = math.floor(x - width + 1)
+		yEnd = math.floor(yStart + height - 1)
+		xtemp = xStart
+		ytemp = yStart
 		
 		-- Check if there is enough space for the room to the east
 		-- utils.dbprint("Start east space check loops")
-		for i = 1, room.height do
+		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
 			if ytemp < 1 or ytemp > dungeon.height then
 				-- utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
-			for j = 1, room.width do
+			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
 					-- utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
-				if getCell(xtemp, ytemp) ~= tileUnused then 
+				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
 					-- utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp - 1
 				j = j + 1
 			end
-			xtemp = room.xStart
+			xtemp = xStart
 			ytemp = ytemp + 1
 			i = i + 1
 		end
 		-- utils.dbprint("End space check loops")
  		
-		-- we're still here, build
+		-- Were still here so enter into roomdata table and save data
+		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
+		print("returned room is: ".. roomNum)
+		room = dungeon.rooms[roomNum]
+
+		-- ...and build the room
 		-- utils.dbprint("Start build loops")
 		xtemp =room.xStart
 		ytemp = room.yStart
@@ -592,8 +643,12 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	end
 
 	utils.dbprint("Built a "..room.width.."x"..room.height.." room, dir: " .. dir .. ", coords: x" .. room.xStart  .. ", y" .. room.yStart .. " / x" .. room.xEnd .. ", y" .. room.yEnd )
-	
 	-- utils.dbprint("End all build loops")
+
+	-- Test wall coordinate data
+	local coordsTest = room.wallCoords[dir][1]
+	print("wall cell test: "..coordsTest[1]..", "..coordsTest[2])
+	
 
 	-- yay, all done
 	return true
@@ -701,7 +756,7 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 
 	-- start with making a room in the middle, which we can start building upon
 	-- makeRoom(startx, starty, width, height, direction)
-	makeRoom(dungeon.width/2, dungeon.height/2, 6, 6, getRand(1,4))
+	makeRoom(dungeon.width/2, dungeon.height/2, 12, 12, getRand(1,4))
 
 	-- keep count of the number of "objects" we've made
 	local currentRooms = 1; 			-- +1 for the first room we just made
