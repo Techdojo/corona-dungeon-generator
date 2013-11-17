@@ -237,7 +237,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		dir = direction
 	end
 
-	dir = 1
+	dir = 4
 
 	-- save room data to roomLib table
 	function createRoomData(xStart, yStart, xEnd, yEnd, width, height)
@@ -277,12 +277,8 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	-- Save a room's wall cell location into wall direction tables
 	function saveWallCoordinate(roomNum,wallDir,x,y)
 		local wallCoords = dungeon.rooms[roomNum].wallCoords[wallDir]
-		local wallCoords = 
-
-
-		local xpos = x
-		local ypos = y
-		table.insert(wallCoords, coords)
+		
+		table.insert(wallCoords, {x,y})
 		print("Print condents of coordinate table:")
 		
 	end
@@ -370,7 +366,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 					saveWallCoordinate(roomNum, 3, xtemp, ytemp)				-- Save south wall coordinates
 				elseif ytemp == room.yEnd then 
 					setCell(xtemp, ytemp, wall)
-					saveWallCoordinate(roomNum, 2, xtemp, ytemp)				-- Save north wall coordinates
+					saveWallCoordinate(roomNum, 1, xtemp, ytemp)				-- Save north wall coordinates
 				else -- and then fill with the floor
 					setCell(xtemp, ytemp, floor) 
 				end
@@ -442,6 +438,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 4, xtemp, ytemp)			-- Save west wall coordinates
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
@@ -452,11 +449,14 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 2, xtemp, ytemp)			-- Save east wall coordinates
 					end 
 				elseif ytemp == room.yStart then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 1, xtemp, ytemp)				-- Save north wall coordinates
 				elseif ytemp == room.yEnd then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 3, xtemp, ytemp)				-- Save south wall coordinates
 				else -- and then fill with the floor
 					setCell(xtemp, ytemp, floor) 
 				end
@@ -528,6 +528,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 4, xtemp, ytemp)			-- Save west wall coordinates
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
@@ -538,11 +539,14 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 2, xtemp, ytemp)			-- Save east wall coordinates
 					end 
 				elseif ytemp == room.yStart then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 1, xtemp, ytemp)				-- Save north wall coordinates
 				elseif ytemp == room.yEnd then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 3, xtemp, ytemp)				-- Save south wall coordinates
 				else -- and then fill with the floor
 					setCell(xtemp, ytemp, floor) 
 				end
@@ -614,6 +618,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 2, xtemp, ytemp)			-- Save east wall coordinates
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
@@ -624,11 +629,14 @@ local function makeRoom(x, y, xlength, ylength, direction)
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
+						saveWallCoordinate(roomNum, 4, xtemp, ytemp)			-- Save west wall coordinates
 					end 
 				elseif ytemp == room.yStart then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 1, xtemp, ytemp)				-- Save north wall coordinates
 				elseif ytemp == room.yEnd then 
 					setCell(xtemp, ytemp, wall)
+					saveWallCoordinate(roomNum, 3, xtemp, ytemp)				-- Save south wall coordinates
 				else -- and then fill with the floor
 					setCell(xtemp, ytemp, floor) 
 				end
@@ -646,8 +654,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	-- utils.dbprint("End all build loops")
 
 	-- Test wall coordinate data
-	local coordsTest = room.wallCoords[dir][1]
-	print("wall cell test: "..coordsTest[1]..", "..coordsTest[2])
+	-- local coordsTest = room.wallCoords[dir][1]
+	-- print("test1 north: "..room.wallCoords[dir][1])
+	-- print("test1 north xpos: "..room.wallCoords[dir][1][1])
+	-- print("test1 north ypos: "..room.wallCoords[dir][1][2])
 	
 
 	-- yay, all done
