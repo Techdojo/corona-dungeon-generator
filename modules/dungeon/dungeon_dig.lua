@@ -81,7 +81,7 @@ local tileChest = 10
 
 -- Nim/max room sizes
 local roomMin = 4
-local romMax = 20
+local roomMax = 20
 
 -- misc. messages to print
 local msgXSize = "X size of dungeon: "
@@ -205,7 +205,7 @@ end
 -- @param direction The direction to build in
 --
 local function makeRoom(x, y, xlength, ylength, direction)
-	utils.dbprint("\nStart room building")
+	
 	-- define the dimensions of the room, it should be at least 4x4 tiles (2x2 
 	-- for walking on, the rest is walls)
 
@@ -236,8 +236,6 @@ local function makeRoom(x, y, xlength, ylength, direction)
 	if direction > 1 or direction < 5 then
 		dir = direction
 	end
-
-	dir = 4
 
 	-- save room data to roomLib table
 	function createRoomData(xStart, yStart, xEnd, yEnd, width, height)
@@ -279,12 +277,12 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		local wallCoords = dungeon.rooms[roomNum].wallCoords[wallDir]
 		
 		table.insert(wallCoords, {x,y})
-		print("Print condents of coordinate table:")
-		
+		-- print("Print condents of coordinate table:")
 	end
 	-- debug print room data
 	-- utils.dbprint("Room data test [x: " .. roomLib[roomLibLen].xStart .. ", y: " .. roomLib[roomLibLen].yStart .. ", width: " .. roomLib[roomLibLen].width .. ", height: " .. roomLib[roomLibLen].height .. "]")
 
+	utils.dbprint("\nStart room building, dir: "..dir)
 
 	if dir == 1 then		-- Build north
 
@@ -299,20 +297,20 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		-- utils.dbprint("Start north space check loops")
 		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
-			if ytemp < 1 or ytemp > dungeon.height then
-				-- utils.dbprint("Room hits left or right walls")
+			if ytemp <= 1 or ytemp >= dungeon.height then
+				utils.dbprint("Room hits top or bottom walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
 			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
-					-- utils.dbprint("Room hits top or bottom walls")
+					-- utils.dbprint("Room hits left or right walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end
 				-- Check to see if the room will collide with an inner part of a room or
 				-- corridor, if it does return false.
 				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
-					-- utils.dbprint("Room hits a filled cell")
+					utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
@@ -324,7 +322,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		end
 		-- utils.dbprint("End north space check loops")
 
- 		
+			
 		-- Were still here so enter into roomdata table and save data
 		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
 		print("returned room is: ".. roomNum)
@@ -392,18 +390,18 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		-- utils.dbprint("Start east space check loops")
 		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
-			if ytemp < 1 or ytemp > dungeon.height then
-				-- utils.dbprint("Room hits left or right walls")
+			if ytemp <= 1 or ytemp >= dungeon.height then
+				utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
 			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
-					-- utils.dbprint("Room hits top or bottom walls")
+					utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
 				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
-					-- utils.dbprint("Room hits a filled cell")
+					utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp + 1
@@ -477,30 +475,36 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		yEnd = math.floor(y + height - 1)
 		xtemp = xStart
 		ytemp = yStart
+		print("yStart: "..xStart)
+		print("yEnd: "..yEnd)
 		
 		-- Check if there is enough space for the room to the south
 		-- utils.dbprint("Start south space check loops")
 		for i = 1, height do
-			-- utils.dbprint("ytemp: "..ytemp)
-			if ytemp < 1 or ytemp > dungeon.height then
-				-- utils.dbprint("Room hits left or right walls")
+			utils.dbprint("ytemp: "..ytemp)
+			if ytemp <= 1 or ytemp >= dungeon.height then
+				utils.dbprint("Room hits top or bottom walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
+
 			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
-					-- utils.dbprint("Room hits top or bottom walls")
+					utils.dbprint("Room hits left or right walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
+
 				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
-					-- utils.dbprint("Room hits a filled cell")
+					utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
+
 				xtemp = xtemp + 1
 				j = j + 1
 			end
+
 			xtemp = xStart
-			ytemp = ytemp - 1
+			ytemp = ytemp + 1
 			i = i + 1
 		end
 		-- utils.dbprint("End space check loops")
@@ -572,18 +576,18 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		-- utils.dbprint("Start east space check loops")
 		for i = 1, height do
 			-- utils.dbprint("ytemp: "..ytemp)
-			if ytemp < 1 or ytemp > dungeon.height then
-				-- utils.dbprint("Room hits left or right walls")
+			if ytemp <= 1 or ytemp >= dungeon.height then
+				utils.dbprint("Room hits left or right walls")
 				return false 								-- if ytemp is the start or end wall, stop. 
 			end
 			for j = 1, width do
 				-- utils.dbprint("xtemp: "..xtemp)
 				if xtemp <= 1 or xtemp >= dungeon.width then 
-					-- utils.dbprint("Room hits top or bottom walls")
+					utils.dbprint("Room hits top or bottom walls")
 					return false 							-- if xtemp is the start or end wall, stop.
 				end 
 				if getCell(xtemp, ytemp) == door or getCell(xtemp, ytemp) == floor or getCell(xtemp, ytemp) == corridor then 
-					-- utils.dbprint("Room hits a filled cell")
+					utils.dbprint("Room hits a filled cell")
 					return false 							-- if cell is not emptey, stop.
 				end 
 				xtemp = xtemp - 1
@@ -764,30 +768,43 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 	-- And now the code of the random-map-generation-algorithm begins!
 	--*******************************************************************************/
 
-	-- start with making a room in the middle, which we can start building upon
+	-- Set max room size based on dungeon size
+	if dungeon.width > dungeon.height then
+		roomMax = math.floor(dungeon.height/3)
+	else
+		roomMax = math.floor(dungeon.width/3)
+	end
+
+	-- Start with making a room in the middle, which we can start building upon
 	-- makeRoom(startx, starty, width, height, direction)
-	makeRoom(dungeon.width/2, dungeon.height/2, 12, 12, getRand(1,4))
+	makeRoom(dungeon.width/2, dungeon.height/2, roomMax, roomMax, getRand(1,4))
 
 	-- keep count of the number of "objects" we've made
 	local currentRooms = 1; 			-- +1 for the first room we just made
-	local roomPick = 0 					-- The room picked to dig from
-	local roomsChecked = {} 			-- 
-
-	--[[
-	-- then we sart the main loop
+	local roomsChecked = {} 			-- List of rooms already checked
+	local roomNum 						-- The room number picked to dig from
+	local room 							-- The picked room data
 	local countingTries = 0
 	local testing = 0
 
+	
+	for countingTries = 1, 1000 do 	-- 0, 1000
+		-- print("countingTries: " .. countingTries)
+		
+		local roomFound = false			-- Boolean to check if a valid room is found
 
-
-
-	for countingTries = 0, 1000 do 	-- 0, 1000
-		print("countingTries: " .. countingTries)
-
-		-- check if we've reached our room quota
-		if currentRooms == numRooms then
-			break
+		-- check if we've reached our room quota or if we have checked all the rooms
+		if #roomsChecked ~= nil then
+			if currentRooms == numRooms or #roomsChecked == currentRooms then
+				break
+			end
 		end
+
+		-- if were still here then pick a room that has not been checked
+		for i=1, #roomsChecked do
+			
+		end
+
 
 		-- start with a random wall
 		local newx = 0  
@@ -886,8 +903,11 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 			end
 		end
 
+		table.insert(roomsChecked,1)
+
 		countingTries = countingTries + 1
 	end
+	
 
 
 
@@ -897,7 +917,6 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 
 
 
-	]]
 
 	dunGenFinished = true
 
