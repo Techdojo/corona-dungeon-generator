@@ -193,6 +193,151 @@ local function showDungeon()
 	end
 end
 
+--- makeCorridor
+-- 
+--
+-- @param x 
+-- @param y 
+-- @param length 
+-- @param direction The direction to build in
+--
+local function makeCorridor(x, y, length, direction)
+	-- utils.dbprint("Make corridor")
+	-- define the dimensions of the corridor (er.. only the width and height..)
+	local len = getRand(2, length)
+	local floor = tileCorridor
+	local dir = 0
+	utils.dbprint("direction: "..direction)
+
+	if direction > 0 and direction < 5 then
+		dir = direction
+	end
+	utils.dbprint("x: "..x)
+	utils.dbprint("y: "..y)
+	utils.dbprint("length: "..len)
+	utils.dbprint("dir: "..dir)
+
+	local xtemp = 0
+	local ytemp = 0
+
+	if dir == 1 then
+		-- north
+		-- check if there's enough space for the corridor
+		-- start with checking it's not out of the boundaries
+		if x <= 1 or x >= dungeon.width then
+			return false
+		else 
+			xtemp = x
+		end
+
+		-- same thing here, to make sure it's not out of the boundaries
+		ytemp = y
+		while ytemp > (y-len) do
+			if ytemp <= 1 or ytemp >= dungeon.height then
+				return false									-- oh boho, it was!
+			end
+
+			if getCell(xtemp, ytemp) ~= tileUnused then
+				return false
+			end
+
+			ytemp = ytemp - 1
+		end
+
+		-- if we're still here, let's start building
+		ytemp = y
+		while ytemp > (y-len) do
+			setCell(xtemp, ytemp, floor)
+			ytemp = ytemp - 1
+		end
+
+	elseif dir == 2 then
+		-- east
+		if y <= 1  or y >= dungeon.height then
+			return false
+		else
+			ytemp = y
+		end
+
+		xtemp = x
+		while xtemp < (x+len) do
+
+			if xtemp <= 1 or xtemp >= dungeon.width then
+				return false
+			end
+
+			if getCell(xtemp, ytemp) ~= tileUnused then
+				return false
+			end
+
+			xtemp = xtemp + 1
+		end
+
+		xtemp = x
+		while xtemp < (x+len) do
+			setCell(xtemp, ytemp, floor)
+			xtemp = xtemp + 1
+		end
+
+	elseif dir == 3 then
+		-- south
+		if x < 0 or x > dungeon.width then
+			return false
+		else 
+			xtemp = x
+		end
+
+		ytemp = y
+		while ytemp < (y+len) do
+			if ytemp < 0 or ytemp > dungeon.height then
+				return false
+			end
+
+			if getCell(xtemp, ytemp) ~= tileUnused then 
+				return false 
+			end
+
+			ytemp = ytemp + 1
+		end
+
+		ytemp = y
+		while ytemp < (y+len) do
+			setCell(xtemp, ytemp, floor)
+			ytemp = ytemp + 1
+		end
+
+	elseif dir == 4 then
+		-- west
+		if y <= 1 or y >= dungeon.height then
+			return false
+		else
+			ytemp = y
+		end
+
+		xtemp = x
+		while xtemp > (x-len) do
+			if xtemp <= 1 or xtemp >= dungeon.width then
+				return false
+			end
+
+			if getCell(xtemp, ytemp) ~= tileUnused then
+				return false
+			end
+
+			xtemp = xtemp - 1
+		end
+
+		xtemp = x
+		while xtemp > (x-len) do
+			setCell(xtemp, ytemp, floor)
+			xtemp = xtemp - 1
+		end
+	end
+
+	--woot, we're still here! let's tell the other guys we're done!!
+	return true
+end
+
 --- makeRoom
 -- Builds a room based on based on a set of parameters. It checks to see if
 -- there is enough space, if there is it then builds the room
@@ -324,7 +469,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
 			
 		-- Were still here so enter into roomdata table and save data
 		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
-		print("returned room is: ".. roomNum)
+		utils.dbprint("returned room is: ".. roomNum)
 		room = dungeon.rooms[roomNum]
 
 		-- ...and build the room
@@ -338,10 +483,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 				-- start with the walls
 				if xtemp == room.xStart then 									-- Build first wall
 					if ytemp == room.yStart then
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner)							-- Build first corner
 					elseif ytemp == room.yEnd then								
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -349,10 +494,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build second corner
 					elseif ytemp == room.yEnd then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -414,7 +559,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
  		
 		-- Were still here so enter into roomdata table and save data
 		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
-		print("returned room is: ".. roomNum)
+		utils.dbprint("returned room is: ".. roomNum)
 		room = dungeon.rooms[roomNum]
 
 		-- ...and build the room
@@ -428,10 +573,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 				-- start with the walls
 				if xtemp == room.xStart then 									-- Build first wall
 					if ytemp == room.yStart then
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner)							-- Build first corner
 					elseif ytemp == room.yEnd then								
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -439,10 +584,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build second corner
 					elseif ytemp == room.yEnd then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -474,8 +619,8 @@ local function makeRoom(x, y, xlength, ylength, direction)
 		yEnd = math.floor(y + height - 1)
 		xtemp = xStart
 		ytemp = yStart
-		print("yStart: "..xStart)
-		print("yEnd: "..yEnd)
+		utils.dbprint("yStart: "..xStart)
+		utils.dbprint("yEnd: "..yEnd)
 		
 		-- Check if there is enough space for the room to the south
 		-- utils.dbprint("Start south space check loops")
@@ -510,7 +655,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
  		
 		-- Were still here so enter into roomdata table and save data
 		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
-		print("returned room is: ".. roomNum)
+		utils.dbprint("returned room is: ".. roomNum)
 		room = dungeon.rooms[roomNum]
 
 		-- ...and build the room
@@ -524,10 +669,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 				-- start with the walls
 				if xtemp == room.xStart then 									-- Build first wall
 					if ytemp == room.yStart then
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner)							-- Build first corner
 					elseif ytemp == room.yEnd then								
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -535,10 +680,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build second corner
 					elseif ytemp == room.yEnd then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -600,7 +745,7 @@ local function makeRoom(x, y, xlength, ylength, direction)
  		
 		-- Were still here so enter into roomdata table and save data
 		local roomNum = createRoomData(xStart, yStart, xEnd, yEnd, width, height)
-		print("returned room is: ".. roomNum)
+		utils.dbprint("returned room is: ".. roomNum)
 		room = dungeon.rooms[roomNum]
 
 		-- ...and build the room
@@ -614,10 +759,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 				-- start with the walls
 				if xtemp == room.xStart then 									-- Build first wall
 					if ytemp == room.yStart then
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner)							-- Build first corner
 					elseif ytemp == room.yEnd then								
-						-- print("build first corner")
+						-- utils.dbprint("build first corner")
 						setCell(xtemp, ytemp, corner) 							-- Build third corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -625,10 +770,10 @@ local function makeRoom(x, y, xlength, ylength, direction)
 					end
 				elseif xtemp == room.xEnd then 									-- Build south wall
 					if ytemp == room.yStart then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build second corner
 					elseif ytemp == room.yEnd then								
-						-- print("build second corner")
+						-- utils.dbprint("build second corner")
 						setCell(xtemp, ytemp, corner)							-- Build fourth corner
 					else 
 						setCell(xtemp, ytemp, wall)
@@ -658,9 +803,9 @@ local function makeRoom(x, y, xlength, ylength, direction)
 
 	-- Test wall coordinate data
 	-- local coordsTest = room.wallCoords[dir][1]
-	-- print("test1 north: "..room.wallCoords[dir][1])
-	-- print("test1 north xpos: "..room.wallCoords[dir][1][1])
-	-- print("test1 north ypos: "..room.wallCoords[dir][1][2])
+	-- utils.dbprint("test1 north: "..room.wallCoords[dir][1])
+	-- utils.dbprint("test1 north xpos: "..room.wallCoords[dir][1][1])
+	-- utils.dbprint("test1 north ypos: "..room.wallCoords[dir][1][2])
 	
 
 	-- yay, all done
@@ -681,11 +826,11 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 
 	local r1 = math.random(1500, 3000)
 	local r2 = math.random(10)
-	-- print("os.time is: " .. now)
-	-- print("Oldseed is: " .. oldseed)
+	-- utils.dbprint("os.time is: " .. now)
+	-- utils.dbprint("Oldseed is: " .. oldseed)
 	-- local seed = now + oldseed
 	local seed = math.floor(r1 / r2)
-	-- print("seed is: " .. seed)
+	-- utils.dbprint("seed is: " .. seed)
 	oldseed = seed
 	
 	math.randomseed(seed)
@@ -756,11 +901,11 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 	-- 	y = y + 1
 	-- end
 
-	-- print("Fill map table with default data")
+	-- utils.dbprint("Fill map table with default data")
 	for y = 1, dungeon.height do
-		-- print("y loop iteration: " .. y)
+		-- utils.dbprint("y loop iteration: " .. y)
 		for x = 1, dungeon.width do
-			-- print("x loop iteration: " .. x)
+			-- utils.dbprint("x loop iteration: " .. x)
 			-- ie, making the borders of unwalkable walls
 			if y == 1 then setCell(x, y, tileStoneWall)
 			elseif y == dungeon.height then setCell(x, y, tileStoneWall)
@@ -798,7 +943,7 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 	local testing = 0
 	
 	for countingTries = 1, 1000 do 	-- 0, 1000
-		-- print("countingTries: " .. countingTries)		
+		-- utils.dbprint("countingTries: " .. countingTries)		
 		local roomFound = false			-- Boolean to check if a valid room is found
 
 		-- start with a random wall
@@ -807,7 +952,7 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 		local xmod = 0 
 		local ymod = 0 
 		local validTile = 0 			-- validTile direction starts at null
-		-- print("validTile is:" .. validTile)
+		-- utils.dbprint("validTile is:" .. validTile)
 		local wallDir = 0 				-- set wallDir
 		local cellTemp	 				-- Cell position in the array to test
 		local feature 					-- what feature to build
@@ -832,22 +977,23 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 		local cellsSouth = #room.wallCoords[3]
 		local cellsWest = #room.wallCoords[4]
 		local cellsTotal = cellsNorth + cellsEast + cellsSouth + cellsWest
-		print("cellsTotal is: "..cellsTotal)
+		utils.dbprint("cellsTotal is: "..cellsTotal)
 
 		-- Try to find a suitable object (room or corridor)..
 		-- (yea, i know it's kinda ugly with a for-loop... -_-')
 		for testing = 1, cellsTotal do 	-- 1 - 100
-			-- print("testing: " .. testing)
+			-- utils.dbprint("testing: " .. testing)
 
-			-- Pick a direction at random
+			-- pick a random wall
 			wallDir = getRand(1,4)
+			-- wallDir = 4
 
 			-- then pick a wall cell at random
 			cellstotest = #room.wallCoords[wallDir]
 			local cellRnd = getRand(1,cellstotest)
 			newx = room.wallCoords[wallDir][cellRnd][1]
 			newy = room.wallCoords[wallDir][cellRnd][2]
-			print("cellstotest x:"..newx.." y:"..newy)
+			utils.dbprint("cell is [dir: "..wallDir.." cellnum: "..cellRnd.."] x:"..newx.." y:"..newy)
 			
 			if wallDir == 1 then
 				validTile = 1 
@@ -889,11 +1035,11 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 		if validTile > 0 then
 				--choose what to build now at our newly found place, and at what direction
 				feature = getRand(0, 100)
-				feature = 86
-				print("feature is: "..feature)
+				feature = 85
+				-- utils.dbprint("feature is: "..feature)
 				if (feature <= chanceRoom) then -- a new room
-					if (makeRoom((newx), (newy), 8, 6, validTile)) then
-						print("Make a connecting room")
+					if makeRoom((newx), (newy), 8, 6, validTile) then
+						-- utils.dbprint("Make a connecting room")
 						currentRooms = currentRooms +1 -- add to our quota
  
 						-- then we mark the wall opening with a door
@@ -902,14 +1048,15 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 						-- clean up infront of the door so we can reach it
 						-- setCell((newx+xmod), (newy+ymod), tileDirtFloor);
 					end
-				elseif (feature >= chanceRoom) then -- new corridor
-					print("make a connecting corridor")
-					-- if (makeCorridor((newx), (newy), 6, validTile)) then
-					-- 	--same thing here, add to the quota and a door
-					-- 	-- currentFeatures = currentFeatures + 1
+				elseif feature > chanceRoom then -- new corridor
+					utils.dbprint("\nmake a connecting corridor")
+					if (makeCorridor((newx+xmod), (newy+ymod), roomMax, wallDir)) then
+						--same thing here, add to the quota and a door
+						-- currentFeatures = currentFeatures + 1
  
-					-- 	setCell(newx, newy, tileDoor)
-					-- end
+						setCell(newx, newy, tileDoor)
+					end
+
 				end
 			end
 
