@@ -68,16 +68,15 @@ local oldseed = 0
 
 --a list of tile types we're using
 local tileUnused = 0
-local tileDirtWall = 1										-- not in use
-local tileDirtCorner = 2									-- not in use
+local tileDirtWall = 1										
+local tileDirtCorner = 2									
 local tileDirtFloor = 3
 local tileStoneWall = 4
-local tileStoneCorner = 5									-- not in use
-local tileCorridor = 6
-local tileDoor = 7
-local tileUpStairs = 8
-local tileDownStairs = 9
-local tileChest = 10
+local tileCorridor = 5
+local tileDoor = 6
+local tileUpStairs = 7
+local tileDownStairs = 8
+local tileChest = 9
 
 -- Nim/max room sizes
 local roomMin = 4
@@ -112,17 +111,17 @@ end
 local function getRand(min, max)
 	-- the seed is based on current date/time and the old, already used seed
 	-- local now = os.time()
-	local r1 = math.random(1500, 3000)
-	local r2 = math.random(10)
-	-- print("os.time is: " .. now)
-	-- print("Oldseed is: " .. oldseed)
-	-- local seed = now + oldseed
-	local seed = math.floor(r1 / r2)
-	-- print("seed is: " .. seed)
-	oldseed = seed
+	-- local r1 = math.random(1500, 3000)
+	-- local r2 = math.random(10)
+	-- -- print("os.time is: " .. now)
+	-- -- print("Oldseed is: " .. oldseed)
+	-- -- local seed = now + oldseed
+	-- local seed = math.floor(r1 / r2)
+	-- -- print("seed is: " .. seed)
+	-- oldseed = seed
 	
-	math.randomseed(seed)
-	-- math.randomseed( os.time() )
+	-- math.randomseed(seed)
+	-- -- math.randomseed( os.time() )
 
 	local rand = math.random(min, max)
 	-- print("rand is: " .. rand)
@@ -680,6 +679,18 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 
 	-- utils.dbprint("dunGen.createDungeon called")
 
+	local r1 = math.random(1500, 3000)
+	local r2 = math.random(10)
+	-- print("os.time is: " .. now)
+	-- print("Oldseed is: " .. oldseed)
+	-- local seed = now + oldseed
+	local seed = math.floor(r1 / r2)
+	-- print("seed is: " .. seed)
+	oldseed = seed
+	
+	math.randomseed(seed)
+	-- math.randomseed( os.time() )
+
 	-- Check initial values for createDungeon parameters
 	-- Check dungeon width parameter, if no value asign a min value
 	if intx == nil then
@@ -786,7 +797,7 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 	local countingTries = 0
 	local testing = 0
 	
-	for countingTries = 1, 10 do 	-- 0, 1000
+	for countingTries = 1, 1000 do 	-- 0, 1000
 		-- print("countingTries: " .. countingTries)		
 		local roomFound = false			-- Boolean to check if a valid room is found
 
@@ -797,15 +808,16 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 		local ymod = 0 
 		local validTile = 0 			-- validTile direction starts at null
 		-- print("validTile is:" .. validTile)
-		local wallDir = 1 				-- set wallDir to north
-		local cellTest = 1 				-- Cell position in the array to test
+		local wallDir = 0 				-- set wallDir
+		local cellTemp	 				-- Cell position in the array to test
+		local feature 					-- what feature to build
 
 		-- check if we've reached our room quota
 		if currentRooms == numRooms then
 			break
 		end
 	
-		-- 
+		-- Pick a room number
 		if currentRooms == 1 then
 			roomNum = 1
 			room = dungeon.rooms[roomNum]
@@ -820,108 +832,86 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 		local cellsSouth = #room.wallCoords[3]
 		local cellsWest = #room.wallCoords[4]
 		local cellsTotal = cellsNorth + cellsEast + cellsSouth + cellsWest
-		print("numCells is: "..numCells)
+		print("cellsTotal is: "..cellsTotal)
 
 		-- Try to find a suitable object (room or corridor)..
 		-- (yea, i know it's kinda ugly with a for-loop... -_-')
 		for testing = 1, cellsTotal do 	-- 1 - 100
 			-- print("testing: " .. testing)
 
-			if cellTest <= cellsNorth then
-				wallDir = 1
-			elseif cellTest > cellsNorth and cellTest <= cellsNorth + cellsEast then
-				wallDir = 2
-			elseif cellTest > cellsNorth + cellsEast and cellTest <= cellsNorth + cellsEast + cellsSouth then
-				wallDir = 3
-			elseif cellTest > cellsNorth + cellsEast + cellsSouth then
-				wallDir = 4
+			-- Pick a direction at random
+			wallDir = getRand(1,4)
+
+			-- then pick a wall cell at random
+			cellstotest = #room.wallCoords[wallDir]
+			local cellRnd = getRand(1,cellstotest)
+			newx = room.wallCoords[wallDir][cellRnd][1]
+			newy = room.wallCoords[wallDir][cellRnd][2]
+			print("cellstotest x:"..newx.." y:"..newy)
+			
+			if wallDir == 1 then
+				validTile = 1 
+				xmod = 0
+				ymod = -1
+			elseif wallDir == 2 then
+				validTile = 2 
+				xmod = 1
+				ymod = 0
+			elseif wallDir == 3 then
+				validTile = 3 
+				xmod = 0
+				ymod = 1
+			elseif wallDir == 4 then
+				validTile = 4
+				xmod = -1
+				ymod = 0
 			end
 
-
-
-			-- Pick a random spot on the map
-			newx = room.wallCoords[wallDir][] 	-- randomly picked x pos
-			newy = room.wallCoords[wallDir][] 	-- randomly picked y pos
-			-- print("newx: " .. newx .. " newy: " .. newy)
-			validTile = -1 				-- Set validTile to -1 (invalid)
-
-			-- If the randomly picked tile is wall or corridor
-			if getCell(newx, newy) == tileDirtWall or getCell(newx, newy) == tileCorridor then
-				-- check if we can reach the place
-				if getCell(newx, newy+1) == tileDirtFloor or getCell(newx, newy+1) == tileCorridor then
-					validTile = 0 		-- tile is to north
-					xmod = 0 			-- x modifier does not change
-					ymod = -1 			-- y modifier changes to 1 row above
-					-- utils.dbprint("validTile is: " .. validTile)
-				elseif getCell(newx-1, newy) == tileDirtFloor or getCell(newx-1, newy) == tileCorridor then
-					validTile = 1 		-- tile is to east
-					xmod = 1 			-- x modifier changes to 1 to the right
-					ymod = 0 			-- y modifier does not change
-					-- utils.dbprint("validTile is: " .. validTile)
-				elseif getCell(newx, newy-1) == tileDirtFloor or getCell(newx, newy-1) == tileCorridor then
-					validTile = 2 		-- tile is to the south
-					xmod = 0 			-- x modifier does not change
-					ymod = 1 			-- y modifier changes to 1 row bellow
-					-- utils.dbprint("validTile is: " .. validTile)
-				elseif getCell(newx+1, newy) == tileDirtFloor or getCell(newx+1, newy) == tileCorridor then
-					validTile = 3 		-- tile is to the west
-					xmod = -1 			-- x modifier changes to 1 to the left
-					ymod = 0 			-- y modifier does not change
-					-- utils.dbprint("validTile is: " .. validTile)
-				end
-
-				-- check that we haven't got another door nearby, so we won't get alot of openings besides
-				-- each other
-				if validTile > -1 then
-					if getCell(newx, newy+1) == tileDoor then 		-- check north
-						validTile = -1
-					elseif getCell(newx-1, newy) == tileDoor then 	-- check east
-						validTile = -1
-					elseif getCell(newx, newy-1) == tileDoor then	-- check south
-						validTile = -1
-					elseif getCell(newx+1, newy) == tileDoor then	-- check west
-						validTile = -1
-					end
-				end
-
-				-- if we can, jump out of the loop and continue with the rest
-				if validTile > -1 then
-					break
-				end
+			-- check that we haven't got another door nearby, so we won't get alot of openings besides
+			-- each other
+			if (getCell(newx, newy-1) == tileDoor) then --north
+				validTile = 0
+			elseif (getCell(newx+1, newy) == tileDoor) then --east
+				validTile = 0
+			elseif (getCell(newx, newy+1) == tileDoor) then --south
+				validTile = 0
+			elseif (getCell(newx-1, newy) == tileDoor) then --west
+				validTile = 0
 			end
+			
+			--if we can, jump out of the loop and continue with the rest
+			if validTile > 0 then break end
 
 			testing = testing + 1
 		end -- end for testing loop
 
-		-- If we found a tile/directon to build then...
-		if validTile > -1 then
-			-- choose what to build now at our newly found place, and at what direction
-			local feature = math.random(0, 100)
-			-- utils.dbprint("Feature is: " .. feature)
-
-			if feature <= chanceRoom then -- a new room
-				-- utils.dbprint("Make room")
-				-- makeRoom(x, y, xlength, ylength, direction)
-				if makeRoom((newx+xmod), (newy+ymod), roomMax, roomMax, validTile) then
-					currentRooms = currentRooms + 1 -- add to our quota
-
-					-- then we mark the wall opening with a door
-					setCell(newx, newy, tileDoor)
-
-					-- clean up infront of the door so we can reach it
-					setCell((newx+xmod), (newy+ymod), tileDirtFloor)
-				end
-			elseif feature > chanceRoom then -- new corridor
-				-- utils.dbprint("Make corridor")
-				if makeCorridor((newx+xmod), (newy+ymod), 6, validTile) then
-					-- same thing here, add to the quota and a door
-					currentFeatures = currentFeatures + 1
-
-					setCell(newx, newy, tileDoor)
+		-- We have a tile we can build with so...
+		if validTile > 0 then
+				--choose what to build now at our newly found place, and at what direction
+				feature = getRand(0, 100)
+				feature = 86
+				print("feature is: "..feature)
+				if (feature <= chanceRoom) then -- a new room
+					if (makeRoom((newx), (newy), 8, 6, validTile)) then
+						print("Make a connecting room")
+						currentRooms = currentRooms +1 -- add to our quota
+ 
+						-- then we mark the wall opening with a door
+						setCell(newx, newy, tileDoor)
+ 
+						-- clean up infront of the door so we can reach it
+						-- setCell((newx+xmod), (newy+ymod), tileDirtFloor);
+					end
+				elseif (feature >= chanceRoom) then -- new corridor
+					print("make a connecting corridor")
+					-- if (makeCorridor((newx), (newy), 6, validTile)) then
+					-- 	--same thing here, add to the quota and a door
+					-- 	-- currentFeatures = currentFeatures + 1
+ 
+					-- 	setCell(newx, newy, tileDoor)
+					-- end
 				end
 			end
-		end
-		
 
 		countingTries = countingTries + 1
 	end

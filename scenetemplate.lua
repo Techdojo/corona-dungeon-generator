@@ -37,7 +37,7 @@ function scene:createScene( event )
 	-----------------------------------------------------------------------------
 	
 	-- dunGenDig.createDungeon(maxWidth, maxHeight, numRooms, numChests, numHiddenRooms, "algorithum")
-	dunGenDig.createDungeon(70,25,4,0,0,"digging")
+	dunGenDig.createDungeon(70,25,20,0,0,"digging")
 
 end
 
