@@ -59,9 +59,9 @@ local enemies = 0
 -- Define the %chance to generate either a room or a corridor on the map
 -- BTW, rooms are 1st priority so actually it's enough to just define the chance
 -- of generating a room
-local chanceRoom = 75										-- % chance for adding a room
-local chanceCorridor = 20									-- % chance for adding a corridor
-local chanceHidden = 5										-- % chance for adding a corridor
+local chanceRoom = 85										-- % chance for adding a room
+local chanceCorridor = 90									-- % chance for adding a corridor
+local chanceHidden = 100									-- % chance for adding a hidden room
 
 -- we will store the old random seed here
 local oldseed = 0
@@ -781,48 +781,67 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 
 	-- keep count of the number of "objects" we've made
 	local currentRooms = 1; 			-- +1 for the first room we just made
-	local roomsChecked = {} 			-- List of rooms already checked
 	local roomNum 						-- The room number picked to dig from
 	local room 							-- The picked room data
 	local countingTries = 0
 	local testing = 0
-
 	
-	for countingTries = 1, 1000 do 	-- 0, 1000
-		-- print("countingTries: " .. countingTries)
-		
+	for countingTries = 1, 10 do 	-- 0, 1000
+		-- print("countingTries: " .. countingTries)		
 		local roomFound = false			-- Boolean to check if a valid room is found
-
-		-- check if we've reached our room quota or if we have checked all the rooms
-		if #roomsChecked ~= nil then
-			if currentRooms == numRooms or #roomsChecked == currentRooms then
-				break
-			end
-		end
-
-		-- if were still here then pick a room that has not been checked
-		for i=1, #roomsChecked do
-			
-		end
-
 
 		-- start with a random wall
 		local newx = 0  
 		local newy = 0 
 		local xmod = 0 
 		local ymod = 0 
-		local validTile = -1
+		local validTile = 0 			-- validTile direction starts at null
 		-- print("validTile is:" .. validTile)
+		local wallDir = 1 				-- set wallDir to north
+		local cellTest = 1 				-- Cell position in the array to test
 
+		-- check if we've reached our room quota
+		if currentRooms == numRooms then
+			break
+		end
+	
+		-- 
+		if currentRooms == 1 then
+			roomNum = 1
+			room = dungeon.rooms[roomNum]
+		else
+			roomNum = getRand(1, currentRooms)
+			room = dungeon.rooms[roomNum]
+		end
+
+		-- Number of wall cells to check in the room
+		local cellsNorth = #room.wallCoords[1]
+		local cellsEast = #room.wallCoords[2]
+		local cellsSouth = #room.wallCoords[3]
+		local cellsWest = #room.wallCoords[4]
+		local cellsTotal = cellsNorth + cellsEast + cellsSouth + cellsWest
+		print("numCells is: "..numCells)
 
 		-- Try to find a suitable object (room or corridor)..
 		-- (yea, i know it's kinda ugly with a for-loop... -_-')
-		for testing = 1, 1000 do 	-- 0, 1000
+		for testing = 1, cellsTotal do 	-- 1 - 100
 			-- print("testing: " .. testing)
 
+			if cellTest <= cellsNorth then
+				wallDir = 1
+			elseif cellTest > cellsNorth and cellTest <= cellsNorth + cellsEast then
+				wallDir = 2
+			elseif cellTest > cellsNorth + cellsEast and cellTest <= cellsNorth + cellsEast + cellsSouth then
+				wallDir = 3
+			elseif cellTest > cellsNorth + cellsEast + cellsSouth then
+				wallDir = 4
+			end
+
+
+
 			-- Pick a random spot on the map
-			newx = getRand(2, dungeon.width-1) 	-- randomly picked x pos
-			newy = getRand(2, dungeon.width-1) 	-- randomly picked y pos
+			newx = room.wallCoords[wallDir][] 	-- randomly picked x pos
+			newy = room.wallCoords[wallDir][] 	-- randomly picked y pos
 			-- print("newx: " .. newx .. " newy: " .. newy)
 			validTile = -1 				-- Set validTile to -1 (invalid)
 
@@ -902,8 +921,7 @@ function dungeon.createDungeon( intx, inty, numRooms, numChests, numHiddenRooms,
 				end
 			end
 		end
-
-		table.insert(roomsChecked,1)
+		
 
 		countingTries = countingTries + 1
 	end
